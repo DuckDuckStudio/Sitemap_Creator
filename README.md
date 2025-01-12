@@ -24,14 +24,18 @@
 
 ## 帮助
 ### 1. 如何允许 GitHub Action 创建拉取请求
+请先确保自己已经是本仓库的owner。
 打开仓库 Settings (上方栏) > Code and automation (左侧栏) > Actions (左侧栏子类别) > General (子类别) > Workflow permissions (划到最下面):  
 
 ![记得按 Save 保存](docs/imgs/README/1.png)
 
-### 2. Java Script 中有哪些可用真值
+### 2.如何允许Github Action写入权限
+请先确保自己已经是本仓库的owner。
+打开仓库 Settings (上方栏) > Code and automation (左侧栏) > Actions (左侧栏子类别) > General (子类别) > Workflow permissions (划到最下面)，将Read repository contents and packages permissions改为Read and write permissions（记得按save保存）。
+### 3. Java Script 中有哪些可用真值
 请见[真值 - MDN Web 文档术语表：Web 相关术语的定义 | MDN](https://developer.mozilla.org/zh-CN/docs/Glossary/Truthy)。  
 
-### 3. 可用的自动合并方式
+### 4. 可用的自动合并方式
 处理时会自动去除`'`、`"`、<code>\`</code>、`-`。
 | 接收的输入 (去除特殊字符后) | 自动合并方式 |
 |-----|-----|
@@ -41,7 +45,7 @@
 | 空字符串 | 不启用自动合并 |
 | 其他任意值 | 视作错误返回 `1` |
 
-### 4. 使用示例
+### 5. 使用示例
 ```yml
 name: 生成 Sitemap
 
