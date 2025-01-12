@@ -21,7 +21,7 @@
 | 参数 | 描述 | 默认值 | 是否必须 | 备注 |
 |-----|-----|-----|-----|-----|
 | `location` | 网站地图的存放位置 (例如 `docs/sitemap.xml`) | `./sitemap.xml` (即仓库根目录) | 否 | / |
-| `token` | 用于创建更新网站地图的拉取请求的 Token | `${{ github.token }}` | 否 | 您的 Token 至少应该具有 `repo` 权限来创建拉取请求，如果使用默认的 Action Token 则需要在仓库设置中允许 GitHub Action 创建拉取请求<sup>[1](#1-如何允许-github-action-创建拉取请求--推送修改)</sup> |
+| `token` | 用于创建更新网站地图的拉取请求的 Token | `${{ github.token }}` | 否 | 您的 Token 至少应该具有 `repo` 权限来推送修改，如果使用默认的 Action Token 则需要在仓库设置中给 GitHub Action 写入权限<sup>[1](#1-如何允许-github-action-创建拉取请求--推送修改)</sup> |
 | `timezone` | 设置生成时使用的时区 | `Asia/Shanghai` (上海，UTF+8，CST) | 否 | 遵循 IANA时区数据库（也称为Olson时区数据库）的格式 |
 | `basic_link` | 指向你网站的基础链接 | `https://${{ github.event.repository.owner.login }}.github.io/${{ github.event.repository.name }}` | 否 | 结尾不要带 `/` |
 | `file_type` | 网页文件的类型 (例如使用 docsify 部署的就是 md，可指定多个类型) | `html,md` | 否 | 不带`.`，`md`类型会自动去掉后缀名 |
@@ -63,7 +63,7 @@
 ```yml
 name: 生成 Sitemap
 
-# GitHub Actiion DuckDuckStudio/Sitemap_Creator 版本 1.0.2 示例工作流
+# GitHub Actiion DuckDuckStudio/Sitemap_Creator 版本 1.0.3 示例工作流
 # https://github.com/marketplace/actions/sitemap-creator-pre-release
 # Under the [GNU Affero General Public License v3.0](https://github.com/DuckDuckStudio/Sitemap_Creator/blob/main/LICENSE)
 
@@ -83,7 +83,7 @@ jobs:
 
     steps:
       - name: 更新网站地图
-        uses: fjwxzde/Sitemap_Creator_Pre-Release@1.0.2
+        uses: fjwxzde/Sitemap_Creator_Pre-Release@1.0.3
         with:
           location: "docs/sitemap.xml"
           basic_link: "https://duckduckstudio.github.io/Articles/#" # docsify 部署的
