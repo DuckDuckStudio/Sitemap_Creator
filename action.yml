@@ -27,7 +27,7 @@ inputs:
 
   file_type:
     required: false
-    description: 网页文件的类型 (例如使用 docsify 部署的就是 md，不指定则设为 html，可指定多个类型)
+    description: 网页文件的类型 (例如使用 docsify 部署的就是 md，可指定多个类型)
     default: "html,md"
 
   ignore_file:
@@ -57,6 +57,11 @@ inputs:
   auto_merge:
     required: false
     description: 设置启用自动合并的类型 (不指定则不启用自动合并，可以使用 merge、rebase、squash)
+
+  update:
+    required: false
+    description: 指定更新网站地图的方式 (直接提交或拉取请求)
+    default: 拉取请求
 
 runs:
   using: composite
@@ -102,57 +107,97 @@ runs:
         DEBUG: ${{ inputs.debug }}
         AUTO_MERGE: ${{ inputs.auto_merge }}
         LOCATION: ${{ inputs.location }}
+        UPDATE: ${{ inputs.update }}
       run: |
-        # 参数处理
+        # 后面都要用的
         # 获取当前日期和时间
         DATE_TIME=$(date '+%Y/%m/%d %H:%M')
 
-        # 移除标签参数中的特殊字符
-        CLEAN_LABELS=$(echo "$LABELS" | sed "s/[\"\'\`]*//g") # 移除 " ' ` 字符
-        if [[ ("$LABELS" != "$CLEAN_LABELS") && ("$DEBUG") ]]; then
-          echo "[DEBUG] 标签包含特殊字符，已移除: $LABELS -> $CLEAN_LABELS"
-        fi
+        # 参数处理
+        # 格式化更新方式 - 默认 PR
+        UPDATE_WAY=$(echo "$UPDATE" | tr '[:upper:]' '[:lower:]' | sed "s/[\"\'\`-]//g; s/[[:space:]]//g")
+        # 根据输入值设置对应的更新方式
+        case "$UPDATE_WAY" in
+          "pr"|"pullrequest"|"pullrequests"|"prs"|"拉取请求")
+            UPDATE_WAY="PR"
+            if [[ "$DEBUG" ]]; then
+              echo "[DEBUG] 更新方式: 创建拉取请求"
+            fi
 
-        # 如果 AUTO_MERGE 为空字符串，则不做任何操作
-        if [[ -z "$AUTO_MERGE" ]]; then
-          if [[ "$DEBUG" ]]; then
-            echo "[DEBUG] 不启用自动合并，因为自动合并方式为空"
-          fi
-          CLEAN_AUTO_MERGE=""
-        else
-          # 格式化自动合并方式
-          CLEAN_AUTO_MERGE=$(echo "$AUTO_MERGE" | tr '[:upper:]' '[:lower:]' | sed "s/[\"\'\`-]//g") # 转为小写并移除 " ' ` -
+            # 如果 AUTO_MERGE 为空字符串，则不做任何操作
+            if [[ -z "$AUTO_MERGE" ]]; then
+              if [[ "$DEBUG" ]]; then
+                echo "[DEBUG] 不启用自动合并，因为自动合并方式为空"
+              fi
+              CLEAN_AUTO_MERGE=""
+            else
+              # 格式化自动合并方式
+              CLEAN_AUTO_MERGE=$(echo "$AUTO_MERGE" | tr '[:upper:]' '[:lower:]' | sed "s/[\"\'\`-]//g")
 
-          # 根据输入值设置对应的自动合并方式
-          case "$CLEAN_AUTO_MERGE" in
-            "s"|"squash"|"压缩"|"压缩合并"|"压缩自动合并")
-              CLEAN_AUTO_MERGE="squash"
-              ;;
-            "m"|"merge"|"合并"|"合并提交"|"提交")
-              CLEAN_AUTO_MERGE="merge"
-              ;;
-            "r"|"rebase"|"变基"|"变基合并"|"变基自动合并")
-              CLEAN_AUTO_MERGE="rebase"
-              ;;
-            *)
-              echo "[ERROR] 未知的自动合并方式: $AUTO_MERGE"
-              echo "[TIP] 可用的自动合并方式: 压缩、合并、变基"
-              exit 1
-              ;;
-          esac
-        fi
+              # 根据输入值设置对应的自动合并方式
+              case "$CLEAN_AUTO_MERGE" in
+                "s"|"squash"|"压缩"|"压缩合并"|"压缩自动合并")
+                  CLEAN_AUTO_MERGE="squash"
+                  ;;
+                "m"|"merge"|"合并"|"合并提交"|"提交")
+                  CLEAN_AUTO_MERGE="merge"
+                  ;;
+                "r"|"rebase"|"变基"|"变基合并"|"变基自动合并")
+                  CLEAN_AUTO_MERGE="rebase"
+                  ;;
+                *)
+                  echo "[ERROR] 未知的自动合并方式: $AUTO_MERGE"
+                  echo "[TIP] 可用的自动合并方式: 压缩、合并、变基"
+                  exit 1
+                  ;;
+              esac
+            fi
 
-        # 如果自动合并方式进行了格式化，输出调试信息
-        if [[ ("$AUTO_MERGE" != "$CLEAN_AUTO_MERGE") && ("$DEBUG") ]]; then
-          echo "[DEBUG] 已格式化自动合并方式: $AUTO_MERGE -> $CLEAN_AUTO_MERGE"
-        fi
+            # 如果自动合并方式进行了格式化，输出调试信息
+            if [[ ("$AUTO_MERGE" != "$CLEAN_AUTO_MERGE") && ("$DEBUG") ]]; then
+              echo "[DEBUG] 已格式化自动合并方式: $AUTO_MERGE -> $CLEAN_AUTO_MERGE"
+            fi
 
-        # ================
+            # 移除标签参数中的特殊字符
+            CLEAN_LABELS=$(echo "$LABELS" | sed "s/[\"\'\`]*//g") # 移除 " ' ` 字符
+            if [[ ("$LABELS" != "$CLEAN_LABELS") && ("$DEBUG") ]]; then
+              echo "[DEBUG] 标签包含特殊字符，已移除: $LABELS -> $CLEAN_LABELS"
+            fi
 
-        # 生成分支名
-        BRANCH_NAME="sitemap-update-$(date +%Y%m%d%H%M%S)"
-        git checkout -b $BRANCH_NAME
-        echo "[INFO] 已创建新分支: $BRANCH_NAME"
+            # 签出分支
+            BRANCH_NAME="sitemap-update-$(date +%Y%m%d%H%M%S)"
+            git checkout -b $BRANCH_NAME
+            echo "[INFO] 已创建新分支: $BRANCH_NAME"
+
+            # 生成工作流 URL
+            WORKFLOW_URL="https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+            ;;
+          "commit"|"提交"|"直接提交"|"directcommit"|"commitdirectly")
+            UPDATE_WAY="Commit"
+            if [[ "$DEBUG" ]]; then
+              echo "[DEBUG] 更新方式: 直接提交到主分支"
+            fi
+            # 不得同时使用的参数
+            params=("LABELS" "AUTO_MERGE")
+
+            # 遍历参数名称数组，检查冲突
+            for param_name in "${params[@]}"; do
+              param_value="${!param_name}"
+              if [[ -n "$param_value" ]]; then
+                echo "[ERROR] 错误的参数传递"
+                echo "[TIP] $param_name 参数不得与更新方式“提交”共存"
+                exit 1
+              fi
+            done
+            ;;
+          *)
+            echo "[ERROR] 未知的更新方式: $AUTO_MERGE"
+            echo "[TIP] 可用的更新方式: 提交、拉取请求"
+            exit 1
+            ;;
+        esac
+
+        # 前面做完都要做的
 
         # 配置 Git 用户
         git config user.name "github-actions[bot]"
@@ -161,32 +206,32 @@ runs:
         # 提交并推送 sitemap.xml
         git add "$LOCATION"
         git commit -m "[${DATE_TIME}] 自动更新网站地图"
-        git push --set-upstream origin $BRANCH_NAME
+        git config --global push.autoSetupRemote true
+        git push
 
-        # 生成工作流 URL
-        WORKFLOW_URL="https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+        # 拉取请求更新后续还要做的
+        if [[ "$UPDATE_WAY" == "PR" ]]; then
+          # 创建拉取请求
+          PR_URL=$(gh pr create --title "[${DATE_TIME}] 自动更新网站地图" \
+                                --body "此拉取请求通过 [工作流](${WORKFLOW_URL}) 使用 [Sitemap Creator](https://github.com/DuckDuckStudio/Sitemap_Creator) 创建。" \
+                                --base ${{ inputs.base_branch }} \
+                                --head $BRANCH_NAME)
+          echo "[INFO] 已创建拉取请求: $PR_URL"
 
-        # 创建拉取请求
-        PR_URL=$(gh pr create --title "[${DATE_TIME}] 自动更新网站地图" \
-                              --body "此拉取请求通过 [工作流](${WORKFLOW_URL}) 使用 [Sitemap Creator](https://github.com/DuckDuckStudio/Sitemap_Creator) 创建。" \
-                              --base ${{ inputs.base_branch }} \
-                              --head $BRANCH_NAME)
+          # 判断是否有清理后的标签并添加到 PR
+          if [[ -n "$CLEAN_LABELS" ]]; then
+            gh pr edit "$PR_URL" --add-label "$CLEAN_LABELS"
+            echo "[INFO] 已为创建的拉取请求添加标签: $CLEAN_LABELS"
+          elif [[ "$DEBUG" ]]; then
+            echo "[DEBUG] 没有有效标签，跳过添加标签"
+          fi
 
-        echo "[INFO] 已创建拉取请求: $PR_URL"
-
-        # 判断是否有清理后的标签并添加到 PR
-        if [[ -n "$CLEAN_LABELS" ]]; then
-          gh pr edit "$PR_URL" --add-label "$CLEAN_LABELS"
-          echo "[INFO] 已为创建的拉取请求添加标签: $CLEAN_LABELS"
-        elif [[ "$DEBUG" ]]; then
-          echo "[DEBUG] 没有有效标签，跳过添加标签"
-        fi
-
-        # 判断是否启用自动合并
-        # 如果 CLEAN_AUTO_MERGE 有值（即设置了自动合并方式），进行后续处理
-        if [[ -n "$CLEAN_AUTO_MERGE" ]]; then
-          gh pr merge "$PR_URL" --$CLEAN_AUTO_MERGE --auto
-          echo "[INFO] 已为拉取请求启用 $CLEAN_AUTO_MERGE 合并"
-        elif [[ "$DEBUG" ]]; then
-          echo "[DEBUG] 没有有效自动合并方式，跳过启用自动合并"
+          # 判断是否启用自动合并
+          # 如果 CLEAN_AUTO_MERGE 有值（即设置了自动合并方式），进行后续处理
+          if [[ -n "$CLEAN_AUTO_MERGE" ]]; then
+            gh pr merge "$PR_URL" --$CLEAN_AUTO_MERGE --auto
+            echo "[INFO] 已为拉取请求启用 $CLEAN_AUTO_MERGE 合并"
+          elif [[ "$DEBUG" ]]; then
+            echo "[DEBUG] 没有有效自动合并方式，跳过启用自动合并"
+          fi
         fi
