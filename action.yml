@@ -135,6 +135,7 @@ runs:
         # 获取生成脚本
         git clone https://github.com/DuckDuckStudio/Sitemap_Creator -b main # 稳定版
         cp Sitemap_Creator/generate-sitemap.mjs Sitemap_Creator.mjs
+        cp Sitemap_Creator/error-report.mjs error-report.mjs # 错误报告脚本
         rm -r Sitemap_Creator
 
         # 生成网站地图
@@ -146,8 +147,20 @@ runs:
       continue-on-error: true # 不要因为提交错误议题的错误影响整个工作流
       env:
         AUTO_BUG_REPORT: ${{ inputs.auto_bug_report }}
+        DEBUG: ${{ inputs.debug }}
+        # --- 错误反馈收集参数 ---
+        LOCATION: ${{ inputs.location }}
+        BASIC_LINK: ${{ inputs.basic_link }}
+        FILE_TYPE: ${{ inputs.file_type }}
+        IGNORE_FILE: ${{ inputs.ignore_file }}
+        WEBSITE_PATH: ${{ inputs.website_path }}
+        LABELS: ${{ inputs.labels }}
+        AUTO_MERGE: ${{ inputs.auto_merge }}
+        UPDATE: ${{ inputs.update }}
       if: failure()
-      run: echo "FAILURE_STEP=生成/JS/脚本" >> $GITHUB_ENV
+      run: |
+        echo "FAILURE_STEP=生成/JS/脚本" >> $GITHUB_ENV
+        node error-report.mjs
 
     - name: 提交并推送 sitemap.xml
       shell: bash
@@ -294,17 +307,7 @@ runs:
       continue-on-error: true # 不要因为提交错误议题的错误影响整个工作流
       env:
         AUTO_BUG_REPORT: ${{ inputs.auto_bug_report }}
-      if: failure()
-      run: echo "FAILURE_STEP=提交/推送/拉取请求" >> $GITHUB_ENV
-
-    - name: 提交错误报告(如果出错)
-      shell: bash
-      continue-on-error: true # 不要因为提交错误议题的错误影响整个工作流
-      env:
         DEBUG: ${{ inputs.debug }}
-        AUTO_BUG_REPORT: ${{ inputs.auto_bug_report }}
-        FAILURE_STEP: ${{ env.FAILURE_STEP }}
-        GH_TOKEN: ${{ github.token }} # 不要使用使用者账户创建议题
         # --- 错误反馈收集参数 ---
         LOCATION: ${{ inputs.location }}
         BASIC_LINK: ${{ inputs.basic_link }}
@@ -314,39 +317,13 @@ runs:
         LABELS: ${{ inputs.labels }}
         AUTO_MERGE: ${{ inputs.auto_merge }}
         UPDATE: ${{ inputs.update }}
-      if: env.FAILURE_STEP # 只有在步骤失败时执行
-      # 分类匹配功能后续再加，之后可能会再签出一个开发分支专门干这个
+      if: failure()
       run: |
-        echo "[INFO] 此工作流似乎在某些地方出现了错误，正在检查是否启用了自动错误报告..."
-        CLEAN_AUTO_BUG_REPORT=$(echo "$AUTO_BUG_REPORT" | tr '[:upper:]' '[:lower:]' | sed "s/[\"\'\`-]//g")
-        if [[ "$DEBUG" ]]; then
-          echo "[DEBUG] 清理后传入的自动错误报告开关: $CLEAN_AUTO_BUG_REPORT"
-        fi
-        case "$CLEAN_AUTO_BUG_REPORT" in
-          "true" | "启用" | "开启" | "open")
-            echo "[INFO] 自动错误报告已启用"
-            if [[ "$DEBUG" ]]; then
-            echo "[DEBUG] 获取到的出错步骤: $FAILURE_STEP"
-            fi
-            case "$FAILURE_STEP" in
-            *权限*)
-              echo "[WARNING] 很抱歉，有关权限的错误我们无法处理，请参阅我们的文档了解你可能需要赋予GitHub Action哪些权限"
-              echo "[WARNING] https://github.com/DuckDuckStudio/Sitemap_Creator/blob/main/README.md#1-%E5%A6%82%E4%BD%95%E5%85%81%E8%AE%B8-github-action-%E5%88%9B%E5%BB%BA%E6%8B%89%E5%8F%96%E8%AF%B7%E6%B1%82--%E6%8E%A8%E9%80%81%E4%BF%AE%E6%94%B9"
-              ;;
-            *参数*)
-              echo "[WARNING] 很抱歉，参数错误需要您自己解决，建议您查看日志中显示 '# 后面都要用的' 的这步的输出，看看是否有参数错误信息。"
-              echo "[WARNING] 如果您认为您的参数是正确无误的，请使用 'debug: true' 来启用调试输出，看看调试输出的信息是否准确。"
-              echo "[WARNING] 如果您还是认为这是 Sitemap Creator 的问题，请向我们提交 Issue。"
-            *)
-              echo "[WARNING] 记录的错误步骤没有匹配任何分类"
-              # 生成工作流 URL
-              WORKFLOW_URL="https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-              gh issue create --repo "DuckDuckStudio/Sitemap_Creator" --title "[错误报告(未匹配)] 在运行工作流时出现未匹配的错误" --body "> 这是一个由 [Sitemap Creator](https://github.com/DuckDuckStudio/Sitemap_Creator) 自动创建的错误报告。\n### 问题类别\n\n未匹配到任何错误分类:\n\`\`\`txt\n$FAILURE_STEP\n\`\`\`\n\n### 错误工作流链接\n\n$WORKFLOW_URL\n\n### 使用的参数\n\n\`\`\`yml\ndebug: $DEBUG\nauto_bug_report: $AUTO_BUG_REPORT\nlocation: $LOCATION\nbasic_link: $BASIC_LINK\nfile_type: $FILE_TYPE\nignore_file: $IGNORE_FILE\nwebsite_path: $WEBSITE_PATH\nlabels: $LABELS\nauto_merge: $AUTO_MERGE\nupdate: $UPDATE\n\`\`\`\n\n"
-              echo "[INFO] 已提交错误报告"
-              ;;
-            esac
-            ;;
-          *)
-            echo "[INFO] 自动错误报告已禁用"
-            ;;
-        esac
+        echo "FAILURE_STEP=提交/推送/拉取请求" >> $GITHUB_ENV
+        node error-report.mjs
+
+    - name: 清理错误报告反馈
+      shell: bash
+      run: |
+        rm error-report.mjs
+        echo "[INFO] 已清理错误报告反馈代码"
