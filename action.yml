@@ -89,14 +89,38 @@ runs:
       with:
         fetch-depth: 0 # 检出完整记录
 
+    - name: 登记错误步骤
+      shell: bash
+      continue-on-error: true # 不要因为提交错误议题的错误影响整个工作流
+      env:
+        AUTO_BUG_REPORT: ${{ inputs.auto_bug_report }}
+      if: failure()
+      run: echo "FAILURE_STEP=第三方/设置/签出/检出/克隆" >> $GITHUB_ENV
+
     - name: 设置 Node.js 环境
       uses: actions/setup-node@v4
       with:
         node-version: "latest"
 
+    - name: 登记错误步骤
+      shell: bash
+      continue-on-error: true # 不要因为提交错误议题的错误影响整个工作流
+      env:
+        AUTO_BUG_REPORT: ${{ inputs.auto_bug_report }}
+      if: failure()
+      run: echo "FAILURE_STEP=第三方/设置/Node.js" >> $GITHUB_ENV
+
     - name: 设置时区
       shell: bash
       run: sudo timedatectl set-timezone ${{ inputs.timezone }}
+
+    - name: 登记错误步骤
+      shell: bash
+      continue-on-error: true # 不要因为提交错误议题的错误影响整个工作流
+      env:
+        AUTO_BUG_REPORT: ${{ inputs.auto_bug_report }}
+      if: failure()
+      run: echo "FAILURE_STEP=初始化/时区/设置" >> $GITHUB_ENV
 
     - name: 创建 Sitemap
       shell: bash
@@ -117,6 +141,14 @@ runs:
         node Sitemap_Creator.mjs
         rm Sitemap_Creator.mjs
 
+    - name: 登记错误步骤
+      shell: bash
+      continue-on-error: true # 不要因为提交错误议题的错误影响整个工作流
+      env:
+        AUTO_BUG_REPORT: ${{ inputs.auto_bug_report }}
+      if: failure()
+      run: echo "FAILURE_STEP=生成/JS/脚本" >> $GITHUB_ENV
+
     - name: 提交并推送 sitemap.xml
       shell: bash
       env:
@@ -128,7 +160,7 @@ runs:
         UPDATE: ${{ inputs.update }}
       run: |
         # 测试，模拟出错 - test202501142122
-        exit 114514
+        exit 3
 
         # 后面都要用的
         # 获取当前日期和时间
@@ -257,7 +289,15 @@ runs:
           fi
         fi
 
-    - name: 提交错误议题(如果出错)
+    - name: 登记错误步骤
+      shell: bash
+      continue-on-error: true # 不要因为提交错误议题的错误影响整个工作流
+      env:
+        AUTO_BUG_REPORT: ${{ inputs.auto_bug_report }}
+      if: failure()
+      run: echo "FAILURE_STEP=提交/推送/拉取请求" >> $GITHUB_ENV
+
+    - name: 提交错误报告(如果出错)
       shell: bash
       continue-on-error: true # 不要因为提交错误议题的错误影响整个工作流
       env:
@@ -275,6 +315,7 @@ runs:
         AUTO_MERGE: ${{ inputs.auto_merge }}
         UPDATE: ${{ inputs.update }}
       if: env.FAILURE_STEP # 只有在步骤失败时执行
+      # 分类匹配功能后续再加，之后可能会再签出一个开发分支专门干这个
       run: |
         echo "[INFO] 此工作流似乎在某些地方出现了错误，正在检查是否启用了自动错误报告..."
         CLEAN_AUTO_BUG_REPORT=$(echo "$AUTO_BUG_REPORT" | tr '[:upper:]' '[:lower:]' | sed "s/[\"\'\`-]//g")
@@ -288,11 +329,11 @@ runs:
             echo "[DEBUG] 获取到的出错步骤: $FAILURE_STEP"
             fi
             case "$FAILURE_STEP" in
-            "权限" | "权限错误" | "没有权限" | "缺少权限")
+            *权限*)
               echo "[WARNING] 很抱歉，有关权限的错误我们无法处理，请参阅我们的文档了解你可能需要赋予GitHub Action哪些权限"
               echo "[WARNING] https://github.com/DuckDuckStudio/Sitemap_Creator/blob/main/README.md#1-%E5%A6%82%E4%BD%95%E5%85%81%E8%AE%B8-github-action-%E5%88%9B%E5%BB%BA%E6%8B%89%E5%8F%96%E8%AF%B7%E6%B1%82--%E6%8E%A8%E9%80%81%E4%BF%AE%E6%94%B9"
               ;;
-            "参数错误")
+            *参数*)
               echo "[WARNING] 很抱歉，参数错误需要您自己解决，建议您查看日志中显示 '# 后面都要用的' 的这步的输出，看看是否有参数错误信息。"
               echo "[WARNING] 如果您认为您的参数是正确无误的，请使用 'debug: true' 来启用调试输出，看看调试输出的信息是否准确。"
               echo "[WARNING] 如果您还是认为这是 Sitemap Creator 的问题，请向我们提交 Issue。"
