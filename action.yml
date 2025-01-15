@@ -150,9 +150,6 @@ runs:
         LOCATION: ${{ inputs.location }}
         UPDATE: ${{ inputs.update }}
       run: |
-        # 测试，模拟出错 - test202501142122
-        exit 3
-
         # 后面都要用的
         # 获取当前日期和时间
         DATE_TIME=$(date '+%Y/%m/%d %H:%M')
