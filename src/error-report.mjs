@@ -36,7 +36,7 @@ if (CLEAN_AUTO_BUG_REPORT === "true" || CLEAN_AUTO_BUG_REPORT === "启用" || CL
     console.warn("[WARNING] 在参数检查阶段，如果出现参数冲突，会输出具体的冲突原因，请尝试按照输出解决")
     throw new Error("[ERROR] 不是我们的错误，不能提交错误报告");
   } else {
-    console.warn (`未匹配到任何已知错误分类，提交错误报告: \n\`\`\`txt\n${FAILURE_STEP}\n\`\`\`\n\n`);
+    console.warn ("未匹配到任何已知错误分类，提交错误报告");
   }
 
   let issueBody = `> 这是一个由 [Sitemap Creator](https://github.com/DuckDuckStudio/Sitemap_Creator) 自动创建的错误报告。\n### 问题类别\n\n### 错误工作流链接\n\n${WORKFLOW_URL}\n\n### 使用的参数\n\n\`\`\`yml\ndebug: ${DEBUG}\nauto_bug_report: ${AUTO_BUG_REPORT}\nlocation: ${process.env.LOCATION}\nbasic_link: ${process.env.BASIC_LINK}\nfile_type: ${process.env.FILE_TYPE}\nignore_file: ${process.env.IGNORE_FILE}\nwebsite_path: ${process.env.WEBSITE_PATH}\nlabels: ${process.env.LABELS}\nauto_merge: ${process.env.AUTO_MERGE}\nupdate: ${process.env.UPDATE}\n\`\`\`\n\n`;
