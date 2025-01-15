@@ -110,8 +110,6 @@ try {
   writeFileSync(location, sitemap, 'utf8');
 
   console.log(`[INFO] 已成功生成并保存为 ${location}`);
-  process.exit(0);
 } catch (error) {
-  console.error('[ERROR] 生成 Sitemap 时发生错误:', error.message);
-  process.exit(1);
+  throw new Error(`[ERROR] 生成 Sitemap 时发生错误: ${error.message}`);
 }

@@ -1,0 +1,29 @@
+{
+  "name": "sitemapcreator",
+  "version": "1.0.3",
+  "description": "GitHub Action 🚀 for creating and updating sitemaps in your repository.",
+  "keywords": [
+    "sitemap",
+    "website",
+    "seo",
+    "creator",
+    "updater",
+    "generator",
+    "urls"
+  ],
+  "homepage": "https://github.com/DuckDuckStudio/Sitemap_Creator#readme",
+  "bugs": {
+    "url": "https://github.com/DuckDuckStudio/Sitemap_Creator/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/DuckDuckStudio/Sitemap_Creator.git"
+  },
+  "license": "AGPL-3.0",
+  "author": "鸭鸭「カモ」 (@DuckDuckStudio)",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "test": "node index.js"
+  }
+}

@@ -89,38 +89,14 @@ runs:
       with:
         fetch-depth: 0 # 检出完整记录
 
-    - name: 登记错误步骤
-      shell: bash
-      continue-on-error: true # 不要因为提交错误议题的错误影响整个工作流
-      env:
-        AUTO_BUG_REPORT: ${{ inputs.auto_bug_report }}
-      if: failure()
-      run: echo "FAILURE_STEP=第三方/设置/签出/检出/克隆" >> $GITHUB_ENV
-
     - name: 设置 Node.js 环境
       uses: actions/setup-node@v4
       with:
         node-version: "latest"
 
-    - name: 登记错误步骤
-      shell: bash
-      continue-on-error: true # 不要因为提交错误议题的错误影响整个工作流
-      env:
-        AUTO_BUG_REPORT: ${{ inputs.auto_bug_report }}
-      if: failure()
-      run: echo "FAILURE_STEP=第三方/设置/Node.js" >> $GITHUB_ENV
-
     - name: 设置时区
       shell: bash
       run: sudo timedatectl set-timezone ${{ inputs.timezone }}
-
-    - name: 登记错误步骤
-      shell: bash
-      continue-on-error: true # 不要因为提交错误议题的错误影响整个工作流
-      env:
-        AUTO_BUG_REPORT: ${{ inputs.auto_bug_report }}
-      if: failure()
-      run: echo "FAILURE_STEP=初始化/时区/设置" >> $GITHUB_ENV
 
     - name: 创建 Sitemap
       shell: bash
@@ -134,8 +110,8 @@ runs:
       run: |
         # 获取生成脚本
         git clone https://github.com/DuckDuckStudio/Sitemap_Creator -b main # 稳定版
-        cp Sitemap_Creator/generate-sitemap.mjs Sitemap_Creator.mjs
-        cp Sitemap_Creator/error-report.mjs error-report.mjs # 错误报告脚本
+        cp Sitemap_Creator/src/generate-sitemap.mjs Sitemap_Creator.mjs
+        cp Sitemap_Creator/src/error-report.mjs error-report.mjs # 错误报告脚本
         rm -r Sitemap_Creator
 
         # 生成网站地图
@@ -146,8 +122,10 @@ runs:
       shell: bash
       continue-on-error: true # 不要因为提交错误议题的错误影响整个工作流
       env:
+        GITHUB_TOKEN: ${{ github.token }}
         AUTO_BUG_REPORT: ${{ inputs.auto_bug_report }}
         DEBUG: ${{ inputs.debug }}
+        REPO: ${{ github.repository }}
         # --- 错误反馈收集参数 ---
         LOCATION: ${{ inputs.location }}
         BASIC_LINK: ${{ inputs.basic_link }}
@@ -306,8 +284,10 @@ runs:
       shell: bash
       continue-on-error: true # 不要因为提交错误议题的错误影响整个工作流
       env:
+        GITHUB_TOKEN: ${{ github.token }}
         AUTO_BUG_REPORT: ${{ inputs.auto_bug_report }}
         DEBUG: ${{ inputs.debug }}
+        REPO: ${{ github.repository }}
         # --- 错误反馈收集参数 ---
         LOCATION: ${{ inputs.location }}
         BASIC_LINK: ${{ inputs.basic_link }}
