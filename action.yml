@@ -1,8 +1,21 @@
 name: Sitemap Creator Stable
 description: GitHub Action 🚀 for creating and updating sitemaps in your repository.
 author: 鸭鸭「カモ」(@DuckDuckStudio)
-color: yellow
-icon: book
+
+branding:
+  color: yellow
+  icon: book
+
+keywords:
+  [
+    'sitemap',
+    'website',
+    'seo',
+    'creator',
+    'updater',
+    'generator',
+    'urls'
+  ]
 
 inputs:
   location:
@@ -50,7 +63,7 @@ inputs:
     description: 控制调试输出的开关
     default: false
 
-  labels:
+  label:
     required: false
     description: 创建拉取请求时添加的标签
 
@@ -62,6 +75,10 @@ inputs:
     required: false
     description: 指定更新网站地图的方式 (直接提交或拉取请求)
     default: 拉取请求
+
+  reviewer:
+    required: false
+    description: 创建拉取请求时指定的审查者
 
 runs:
   using: composite
@@ -103,11 +120,13 @@ runs:
       shell: bash
       env:
         GH_TOKEN: ${{ inputs.token }}
-        LABELS: ${{ inputs.labels }}
+        LABELS: ${{ inputs.label }}
         DEBUG: ${{ inputs.debug }}
         AUTO_MERGE: ${{ inputs.auto_merge }}
         LOCATION: ${{ inputs.location }}
         UPDATE: ${{ inputs.update }}
+        REVIEWER: ${{ inputs.reviewer }}
+        TOKEN: ${{ github.token }}
       run: |
         # 后面都要用的
         # 获取当前日期和时间
@@ -134,7 +153,6 @@ runs:
               # 格式化自动合并方式
               CLEAN_AUTO_MERGE=$(echo "$AUTO_MERGE" | tr '[:upper:]' '[:lower:]' | sed "s/[\"\'\`-]//g")
 
-              # 根据输入值设置对应的自动合并方式
               case "$CLEAN_AUTO_MERGE" in
                 "s"|"squash"|"压缩"|"压缩合并"|"压缩自动合并")
                   CLEAN_AUTO_MERGE="squash"
@@ -153,15 +171,81 @@ runs:
               esac
             fi
 
-            # 如果自动合并方式进行了格式化，输出调试信息
             if [[ ("$AUTO_MERGE" != "$CLEAN_AUTO_MERGE") && ("$DEBUG") ]]; then
               echo "[DEBUG] 已格式化自动合并方式: $AUTO_MERGE -> $CLEAN_AUTO_MERGE"
             fi
 
-            # 移除标签参数中的特殊字符
-            CLEAN_LABELS=$(echo "$LABELS" | sed "s/[\"\'\`]*//g") # 移除 " ' ` 字符
+            # 格式化标签
+            CLEAN_LABELS=$(echo "$LABELS" | sed "s/[\"\'\`]*//g")
             if [[ ("$LABELS" != "$CLEAN_LABELS") && ("$DEBUG") ]]; then
               echo "[DEBUG] 标签包含特殊字符，已移除: $LABELS -> $CLEAN_LABELS"
+            fi
+
+            # 校验审查者
+            CLEAN_REVIEWER=$(echo "$REVIEWER" | sed "s/[\"\'\`]*//g")
+            if [[ ("$REVIEWER" != "$CLEAN_REVIEWER") && ("$DEBUG") ]]; then
+              echo "[DEBUG] 审查者信息包含特殊字符，已移除: $REVIEWER -> $CLEAN_REVIEWER"
+            fi
+
+            if [[ -n $CLEAN_REVIEWER ]]; then
+              IFS=',' read -r -a reviewers <<< "$CLEAN_REVIEWER"
+              # 遍历每个用户名并检查是否是协作者
+              for reviewer in "${reviewers[@]}"; do
+                # 使用 curl 发送请求，获取协作者信息
+                response=$(curl -s -w "%{http_code}" -o response.json \
+                  -H "Authorization: token $TOKEN" \
+                  "https://api.github.com/repos/${{ github.repository }}/collaborators")
+
+                # 获取响应的状态码
+                status_code=$(tail -n1 <<< "$response")
+
+                # 处理不同的 HTTP 状态码
+                case $status_code in
+                  200|201)
+                    # 请求成功，检查是否有该审查者
+                    if ! jq -e ".[] | select(.login == \"$reviewer\")" response.json > /dev/null; then
+                      echo "[ERROR] $reviewer 不是仓库的协作者"
+                      if [[ "$DEBUG" ]]; then
+                        echo "[DEBUG] GitHub API 请求返回:"
+                        while IFS= read -r line; do
+                          echo "[DEBUG] $line"
+                        done < response.json
+                        exit 1
+                      fi
+                    elif [[ "$DEBUG" ]]; then
+                      echo "[DEBUG] 审查者 $reviewer 鉴权成功"
+                    fi
+                    ;;
+                  401)
+                    echo "[ERROR] 验证审查者时出错: 鉴权失败 (401):"
+                    while IFS= read -r line; do
+                      echo "[DEBUG] $line"
+                    done < response.json
+                    exit 1
+                    ;;
+                  403)
+                    echo "[ERROR] 验证审查者时出错: 没有权限或达到速率限制 (403)"
+                    while IFS= read -r line; do
+                      echo "[DEBUG] $line"
+                    done < response.json
+                    exit 1
+                    ;;
+                  404)
+                    echo "[ERROR] 验证审查者时出错: 没有权限或仓库不存在 (404)"
+                    while IFS= read -r line; do
+                      echo "[DEBUG] $line"
+                    done < response.json
+                    exit 1
+                    ;;
+                  *)
+                    echo "[ERROR] 验证审查者时出错: 未命中的非成功状态码 ($status_code)"
+                    while IFS= read -r line; do
+                      echo "[DEBUG] $line"
+                    done < response.json
+                    exit 1
+                    ;;
+                esac
+              done
             fi
 
             # 签出分支
@@ -224,6 +308,14 @@ runs:
             echo "[INFO] 已为创建的拉取请求添加标签: $CLEAN_LABELS"
           elif [[ "$DEBUG" ]]; then
             echo "[DEBUG] 没有有效标签，跳过添加标签"
+          fi
+
+          # 判断是否有清理后的审查者并添加到 PR
+          if [[ -n "$CLEAN_REVIEWER" ]]; then
+            gh pr edit "$PR_URL" --add-reviewer "$CLEAN_REVIEWER"
+            echo "[INFO] 已为创建的拉取请求添加审查者: $CLEAN_REVIEWER"
+          elif [[ "$DEBUG" ]]; then
+            echo "[DEBUG] 没有有效审查者，跳过添加审查者"
           fi
 
           # 判断是否启用自动合并

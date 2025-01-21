@@ -18,8 +18,11 @@ body:
       description: 你遇到了什么样的问题?
       options:
         - 链接问题
-        - 最后修改时间错误
-        - JS相关问题
+        - git问题
+        - JS问题
+        - 权限问题
+        - 拉取请求问题
+        - 自动合并问题
         - 其他
     validations:
       required: true
@@ -49,14 +52,7 @@ body:
       required: false
   - type: textarea
     attributes:
-      label: 确认相关信息
-      description: 请将页面在控制台的输出放到这里 (F12)
-      render: raw
-    validations:
-      required: true
-  - type: textarea
-    attributes:
       label: 屏幕截图或日志
       description: 请上传你记录的日志/屏幕截图，因为它们将帮助我们找到问题的根本原因。
     validations:
-      required: true
+      required: false
