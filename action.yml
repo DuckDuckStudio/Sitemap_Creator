@@ -80,6 +80,16 @@ inputs:
     required: false
     description: 创建拉取请求时指定的审查者
 
+  author_name:
+    required: false
+    description: 更新提交的撰写者名
+    default: "github-actions[bot]"
+
+  author_email:
+    required: false
+    description: 更新提交的撰写者邮箱
+    default: "41898282+github-actions[bot]@users.noreply.github.com"
+
 runs:
   using: composite
   steps:
@@ -127,10 +137,16 @@ runs:
         UPDATE: ${{ inputs.update }}
         REVIEWER: ${{ inputs.reviewer }}
         TOKEN: ${{ github.token }}
+        AUTHOR_NAME: ${{ inputs.author_name }}
+        AUTHOR_EMAIL: ${{ inputs.author_email }}
       run: |
         # 后面都要用的
         # 获取当前日期和时间
         DATE_TIME=$(date '+%Y/%m/%d %H:%M')
+
+        # 提交者名和邮箱
+        AUTHOR_NAME=$(echo "$AUTHOR_NAME" | sed "s/[\"\'\`]*//g")
+        AUTHOR_EMAIL=$(echo "$AUTHOR_EMAIL" | sed "s/[\"\'\`]*//g")
 
         # 参数处理
         # 格式化更新方式 - 默认 PR
@@ -284,8 +300,8 @@ runs:
         # 前面做完都要做的
 
         # 配置 Git 用户
-        git config user.name "github-actions[bot]"
-        git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+        git config user.name "$AUTHOR_NAME"
+        git config user.email "$AUTHOR_EMAIL"
 
         # 提交并推送 sitemap.xml
         git add "$LOCATION"
