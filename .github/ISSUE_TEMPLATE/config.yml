@@ -1,5 +1,11 @@
 blank_issues_enabled: true
 contact_links:
-  - name: 查看已经打开的问题
+  - name: 创建有关 稳定版 的问题
+    url: https://github.com/DuckDuckStudio/Sitemap_Creator/issues/new
+    about: 请确认你的问题没有与已存在的问题重复。
+  - name: 查看 预发行版 已经打开的问题
+    url: https://github.com/fjwxzde/Sitemap_Creator/issues
+    about: 请确认你的问题没有与已存在的问题重复。
+  - name: 查看 稳定版 已经打开的问题
     url: https://github.com/DuckDuckStudio/Sitemap_Creator/issues
     about: 请确认你的问题没有与已存在的问题重复。

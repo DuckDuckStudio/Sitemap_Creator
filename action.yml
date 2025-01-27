@@ -1,4 +1,4 @@
-name: Sitemap Creator Stable
+name: Sitemap Creator Pre-Release
 description: GitHub Action 🚀 for creating and updating sitemaps in your repository.
 author: 鸭鸭「カモ」(@DuckDuckStudio)
 
@@ -118,7 +118,7 @@ runs:
         DEBUG: ${{ inputs.debug }}
       run: |
         # 获取生成脚本
-        git clone https://github.com/DuckDuckStudio/Sitemap_Creator -b main # 稳定版
+        git clone https://github.com/fjwxzde/Sitemap_Creator -b Pre-Release # 预发行版
         cp Sitemap_Creator/generate-sitemap.mjs Sitemap_Creator.mjs
         rm -r Sitemap_Creator
 
