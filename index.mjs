@@ -119,6 +119,53 @@ try {
   process.exit(1);
 }
 
+// 自动关闭过时的更新请求
+async function closeOutdatedPRs() {
+    const options = {
+        hostname: 'api.github.com',
+        path: `/repos/${process.env.GITHUB_REPOSITORY}/pulls?state=open&per_page=100`,
+        headers: {
+            'Authorization': `token ${process.env.TOKEN}`,
+            'User-Agent': 'node.js'
+        }
+    };
+
+    const fetchPRs = (page = 1) => {
+        return new Promise((resolve, reject) => {
+            https.get({ ...options, path: `${options.path}&page=${page}` }, (res) => {
+                let data = '';
+                res.on('data', (chunk) => {
+                    data += chunk;
+                });
+
+                res.on('end', () => {
+                    const pulls = JSON.parse(data);
+                    resolve(pulls);
+                });
+            }).on('error', (e) => {
+                reject(`[ERROR] 请求失败: ${e.message}`);
+            });
+        });
+    };
+
+    let page = 1;
+    let pulls = [];
+    let fetchedPRs;
+
+    do {
+        fetchedPRs = await fetchPRs(page);
+        pulls = pulls.concat(fetchedPRs);
+        page++;
+    } while (fetchedPRs.length === 100);
+
+    const outdatedPRs = pulls.filter(pr => pr.title.includes('自动更新网站地图') && pr.base.ref === process.env.BASE_BRANCH && pr.head.ref.includes('Sitemap_Creator'));
+
+    outdatedPRs.forEach(pr => {
+        execSync(`gh pr close ${pr.number} --delete-branch`);
+        console.log(`[INFO] 已关闭过时的拉取请求: ${pr.html_url}`);
+    });
+}
+
 try{
     // 获取当前日期和时间
     const DATE_TIME = now.toISOString().replace(/T/, ' ').replace(/\..+/, '');
@@ -249,6 +296,7 @@ try{
                 process.exit(1);
             }
         });
+        BRANCH_NAME = process.env.BASE_BRANCH;
     } else {
         console.error(`[ERROR] 未知的更新方式: ${process.env.AUTO_MERGE}`);
         console.error('[TIP] 可用的更新方式: 提交、拉取请求');
@@ -265,6 +313,9 @@ try{
     execSync(`git push --set-upstream origin ${BRANCH_NAME}`);
 
     if (UPDATE_WAY === 'PR') {
+        // 关闭过时的更新请求
+        await closeOutdatedPRs();
+
         const WORKFLOW_URL = `https://github.com/${process.env.GITHUB_REPOSITORY}/actions/runs/${process.env.GITHUB_RUN_ID}`;
         const PR_URL = execSync(`gh pr create --title "[${DATE_TIME}] 自动更新网站地图" --body "此拉取请求通过 [工作流](${WORKFLOW_URL}) 使用 [Sitemap Creator](https://github.com/DuckDuckStudio/Sitemap_Creator) 创建。" --base ${process.env.BASE_BRANCH} --head ${BRANCH_NAME}`).toString().trim();
         console.log(`[INFO] 已创建拉取请求: ${PR_URL}`);
