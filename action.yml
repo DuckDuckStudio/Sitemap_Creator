@@ -117,9 +117,7 @@ runs:
       env:
         TZ: ${{ inputs.timezone }}
       run: |
-        $ErrorActionPreference = 'Stop' # 有错误就停止
-        $tz = [System.TimeZoneInfo]::FindSystemTimeZoneById($env:TZ) # 获取时区
-        [System.TimeZoneInfo]::Local = $tz # 设置时区
+        tzutil /s $env:TZ
 
     - name: 设置时区
       shell: bash
