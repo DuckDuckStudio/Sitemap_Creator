@@ -21,11 +21,11 @@ try {
 
   console.log(`[DEBUG] Debug状态: ${debug}`)
   if (debug) {
-    console.warn(`[DEBUG] 网站地图存放路径: ${location}`)
-    console.warn(`[DEBUG] 网站基础链接: ${basicLink}`)
-    console.warn(`[DEBUG] 网站文件存放路径: ${websitePath}`)
-    console.warn(`[DEBUG] 页面文件类型: ${fileTypes}`)
-    console.warn(`[DEBUG] 忽略的文件: ${ignorePatterns}`)
+    console.log(`[DEBUG] 网站地图存放路径: ${location}`)
+    console.log(`[DEBUG] 网站基础链接: ${basicLink}`)
+    console.log(`[DEBUG] 网站文件存放路径: ${websitePath}`)
+    console.log(`[DEBUG] 页面文件类型: ${fileTypes}`)
+    console.log(`[DEBUG] 忽略的文件: ${ignorePatterns}`)
   }
   // -----------------
 
@@ -59,7 +59,7 @@ try {
         if (ignorePatterns.some(pattern => {
           if (relativePath.includes(pattern)) {
             if (debug) {
-              console.warn(`[DEBUG] 跳过文件 [${fullPath}] 因为其路径中包含 [${pattern}]`);
+              console.log(`[DEBUG] 跳过文件 [${fullPath}] 因为其路径中包含 [${pattern}]`);
             }
             return true; // 如果找到了匹配的模式，返回 true，表示该文件应被忽略
           }
