@@ -140,7 +140,7 @@ async function closeOutdatedPRs() {
 
                 res.on('end', () => {
                     const pulls = JSON.parse(data);
-                    resolve(pulls);
+                    resolve({ pulls, rateLimitRemaining: res.headers['x-ratelimit-remaining'] });
                 });
             }).on('error', (e) => {
                 reject(`[ERROR] 请求失败: ${e.message}`);
@@ -151,11 +151,19 @@ async function closeOutdatedPRs() {
     let page = 1;
     let pulls = [];
     let fetchedPRs;
+    let rateLimitRemaining;
 
     do {
-        fetchedPRs = await fetchPRs(page);
+        const result = await fetchPRs(page);
+        fetchedPRs = result.pulls;
+        rateLimitRemaining = result.rateLimitRemaining;
         pulls = pulls.concat(fetchedPRs);
         page++;
+
+        if (rateLimitRemaining <= 1) {
+            console.log('[INFO] 速率限制接近，等待 60 秒...');
+            await new Promise(resolve => setTimeout(resolve, 60000));
+        }
     } while (fetchedPRs.length === 100);
 
     const outdatedPRs = pulls.filter(pr => pr.title.includes('自动更新网站地图') && pr.base.ref === process.env.BASE_BRANCH && pr.head.ref.includes('Sitemap_Creator'));
