@@ -33,7 +33,7 @@ try {
   function getLastCommitDate(filePath) {
     try {
       // 使用 git log 命令获取最后一次提交的时间
-      const result = execSync(`git log -1 --format=%cI -- "${filePath}"`, { cwd: websitePath });
+      const result = execSync('git', ['log', '-1', '--format=%cI', '--', filePath], { cwd: websitePath });
       const lastCommitDate = result.toString().trim();
       return lastCommitDate
     } catch (err) {
@@ -161,8 +161,8 @@ async function closeOutdatedPRs() {
     const outdatedPRs = pulls.filter(pr => pr.title.includes('自动更新网站地图') && pr.base.ref === process.env.BASE_BRANCH && pr.head.ref.includes('Sitemap_Creator'));
 
     outdatedPRs.forEach(pr => {
-        execSync(`gh pr comment ${pr.number} --body "[[Sitemap Creator](https://github.com/DuckDuckStudio/Sitemap_Creator)] 此拉取请求似乎已过时，将自动关闭。"`);
-        execSync(`gh pr close ${pr.number} --delete-branch`);
+        execSync('gh', ['pr', 'comment', pr.number, '--body', "[[Sitemap Creator](https://github.com/DuckDuckStudio/Sitemap_Creator)] 此拉取请求似乎已过时，将自动关闭。"]);
+        execSync('gh', ['pr', 'close', pr.number, '--delete-branch']);
         console.log(`[INFO] 已关闭过时的拉取请求: ${pr.html_url}`);
     });
 }
@@ -280,7 +280,7 @@ try{
 
         const now = new Date();
         BRANCH_NAME = `Sitemap_Creator-${now.getFullYear()}${(now.getMonth() + 1).toString().padStart(2, '0')}${now.getDate().toString().padStart(2, '0')}${now.getHours().toString().padStart(2, '0')}${now.getMinutes().toString().padStart(2, '0')}${now.getSeconds().toString().padStart(2, '0')}`;
-        execSync(`git checkout -b ${BRANCH_NAME}`);
+        execSync('git', ['checkout', '-b', BRANCH_NAME]);
         console.log(`[INFO] 已创建新分支: ${BRANCH_NAME}`);
     } else if (['commit', '提交', '直接提交', 'directcommit', 'commitdirectly'].includes(UPDATE_WAY)) {
         UPDATE_WAY = 'Commit';
@@ -305,38 +305,38 @@ try{
     }
 
     // 配置 Git 用户
-    execSync(`git config user.name "${AUTHOR_NAME}"`);
-    execSync(`git config user.email "${AUTHOR_EMAIL}"`);
+    execSync('git', ['config', 'user.name', AUTHOR_NAME]);
+    execSync('git', ['config', 'user.email', AUTHOR_EMAIL]);
 
     // 提交并推送 sitemap.xml
-    execSync(`git add "${process.env.LOCATION}"`);
-    execSync(`git commit -m "[${DATE_TIME}] 自动更新网站地图"`);
-    execSync(`git push --set-upstream origin ${BRANCH_NAME}`);
+    execSync('git', ['add', process.env.LOCATION]);
+    execSync('git', ['commit', '-m', `[${DATE_TIME}] 自动更新网站地图`]);
+    execSync('git', ['push', '--set-upstream', 'origin', BRANCH_NAME]);
 
     if (UPDATE_WAY === 'PR') {
         // 关闭过时的更新请求
         await closeOutdatedPRs();
 
         const WORKFLOW_URL = `https://github.com/${process.env.GITHUB_REPOSITORY}/actions/runs/${process.env.GITHUB_RUN_ID}`;
-        const PR_URL = execSync(`gh pr create --title "[${DATE_TIME}] 自动更新网站地图" --body "此拉取请求通过 [工作流](${WORKFLOW_URL}) 使用 [Sitemap Creator](https://github.com/DuckDuckStudio/Sitemap_Creator) 创建。" --base ${process.env.BASE_BRANCH} --head ${BRANCH_NAME}`).toString().trim();
+        const PR_URL = execSync('gh', ['pr', 'create', '--title', `[${DATE_TIME}] 自动更新网站地图`, '--body', `此拉取请求通过 [工作流](${WORKFLOW_URL}) 使用 [Sitemap Creator](https://github.com/DuckDuckStudio/Sitemap_Creator) 创建。`, '--base', process.env.BASE_BRANCH, '--head', BRANCH_NAME]).toString().trim();
         console.log(`[INFO] 已创建拉取请求: ${PR_URL}`);
 
         if (CLEAN_LABELS) {
-            execSync(`gh pr edit "${PR_URL}" --add-label "${CLEAN_LABELS}"`);
+            execSync('gh', ['pr', 'edit', PR_URL, '--add-label', CLEAN_LABELS]);
             console.log(`[INFO] 已为创建的拉取请求添加标签: ${CLEAN_LABELS}`);
         } else if (process.env.DEBUG) {
             console.log('[DEBUG] 没有有效标签，跳过添加标签');
         }
 
         if (CLEAN_REVIEWER) {
-            execSync(`gh pr edit "${PR_URL}" --add-reviewer "${CLEAN_REVIEWER}"`);
+            execSync('gh', ['pr', 'edit', PR_URL, '--add-reviewer', CLEAN_REVIEWER]);
             console.log(`[INFO] 已为创建的拉取请求添加审查者: ${CLEAN_REVIEWER}`);
         } else if (process.env.DEBUG) {
             console.log('[DEBUG] 没有有效审查者，跳过添加审查者');
         }
 
         if (CLEAN_AUTO_MERGE) {
-            execSync(`gh pr merge "${PR_URL}" --${CLEAN_AUTO_MERGE} --auto`);
+            execSync('gh', ['pr', 'merge', PR_URL, `--${CLEAN_AUTO_MERGE}`, '--auto']);
             console.log(`[INFO] 已为拉取请求启用 ${CLEAN_AUTO_MERGE} 合并`);
         } else if (process.env.DEBUG) {
             console.log('[DEBUG] 没有有效自动合并方式，跳过启用自动合并');
