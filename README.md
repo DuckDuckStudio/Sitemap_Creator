@@ -5,7 +5,7 @@
 > 这是 Sitemap Creator 的稳定版仓库。预发行版仓库请前往 [fjwxzde/Sitemap_Creator_Pre-Release](https://github.com/fjwxzde/Sitemap_Creator_Pre-Release) 查看。  
 
 [![GitHub Release](https://img.shields.io/github/release/DuckDuckStudio/Sitemap_Creator?style=flat)](https://github.com/DuckDuckStudio/Sitemap_Creator/releases/latest)  
-[反馈Bug🐛](https://github.com/DuckDuckStudio/Sitemap_Creator/issues) | [使用示例🚀](#5-使用示例)  
+[反馈Bug🐛](https://github.com/DuckDuckStudio/Sitemap_Creator/issues) | [使用示例🚀](#6-使用示例)  
 
 ## 为什么选择 Sitemap Creator 🏆
 | | Sitemap | Creator |  |
@@ -89,7 +89,7 @@ permissions:
 ```yml
 name: 生成 Sitemap
 
-# GitHub Actiion DuckDuckStudio/Sitemap_Creator 版本 1.0.3 示例工作流
+# GitHub Actiion DuckDuckStudio/Sitemap_Creator 版本 1.0.4 示例工作流
 # https://github.com/marketplace/actions/sitemap-creator-stable
 # Under the [GNU Affero General Public License v3.0](https://github.com/DuckDuckStudio/Sitemap_Creator/blob/main/LICENSE)
 
@@ -109,7 +109,7 @@ jobs:
 
     steps:
       - name: 更新网站地图
-        uses: DuckDuckStudio/Sitemap_Creator@1.0.3
+        uses: DuckDuckStudio/Sitemap_Creator@1.0.4
         with:
           location: "docs/sitemap.xml"
           basic_link: "https://duckduckstudio.github.io/Articles/#" # docsify 部署的
