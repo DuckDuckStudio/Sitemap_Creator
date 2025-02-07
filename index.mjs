@@ -231,7 +231,7 @@ try{
         }
 
         const now = new Date();
-        BRANCH_NAME = `sitemap-update-${now.getFullYear()}${(now.getMonth() + 1).toString().padStart(2, '0')}${now.getDate().toString().padStart(2, '0')}${now.getHours().toString().padStart(2, '0')}${now.getMinutes().toString().padStart(2, '0')}${now.getSeconds().toString().padStart(2, '0')}`;
+        BRANCH_NAME = `Sitemap_Creator-${now.getFullYear()}${(now.getMonth() + 1).toString().padStart(2, '0')}${now.getDate().toString().padStart(2, '0')}${now.getHours().toString().padStart(2, '0')}${now.getMinutes().toString().padStart(2, '0')}${now.getSeconds().toString().padStart(2, '0')}`;
         execSync(`git checkout -b ${BRANCH_NAME}`);
         console.log(`[INFO] 已创建新分支: ${BRANCH_NAME}`);
     } else if (['commit', '提交', '直接提交', 'directcommit', 'commitdirectly'].includes(UPDATE_WAY)) {
@@ -262,8 +262,7 @@ try{
     // 提交并推送 sitemap.xml
     execSync(`git add "${process.env.LOCATION}"`);
     execSync(`git commit -m "[${DATE_TIME}] 自动更新网站地图"`);
-    execSync('git config --global push.autoSetupRemote true');
-    execSync('git push');
+    execSync(`git push --set-upstream origin ${BRANCH_NAME}`);
 
     if (UPDATE_WAY === 'PR') {
         const WORKFLOW_URL = `https://github.com/${process.env.GITHUB_REPOSITORY}/actions/runs/${process.env.GITHUB_RUN_ID}`;
