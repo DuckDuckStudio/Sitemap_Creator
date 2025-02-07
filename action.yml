@@ -126,19 +126,14 @@ runs:
         TZ: ${{ inputs.timezone }}
       run: sudo systemsetup -settimezone $TZ
 
-    - name: 创建 Sitemap
+    - name: 获取生成脚本
       shell: bash
       run: |
-        # 获取生成脚本
         git clone https://github.com/DuckDuckStudio/Sitemap_Creator -b main # 稳定版
         cp Sitemap_Creator/index.mjs Sitemap_Creator.mjs
         rm -r Sitemap_Creator
 
-        # 生成网站地图
-        node Sitemap_Creator.mjs
-        rm Sitemap_Creator.mjs
-
-    - name: 提交并推送 sitemap.xml
+    - name: 生成网站地图
       shell: bash
       env:
         # 这几乎包含了所有的参数
@@ -159,4 +154,5 @@ runs:
         IGNORE_FILE: ${{ inputs.ignore_file }}
         WEBSITE_PATH: ${{ inputs.website_path }}
       run: |
-        node Sitemap_Push.mjs
+        node Sitemap_Creator.mjs
+        rm Sitemap_Creator.mjs
