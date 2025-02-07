@@ -80,6 +80,16 @@ inputs:
     required: false
     description: 创建拉取请求时指定的审查者
 
+  author_name:
+    required: false
+    description: 更新提交的撰写者名
+    default: "github-actions[bot]"
+
+  author_email:
+    required: false
+    description: 更新提交的撰写者邮箱
+    default: "41898282+github-actions[bot]@users.noreply.github.com"
+
 runs:
   using: composite
   steps:
@@ -87,6 +97,7 @@ runs:
       uses: actions/checkout@v4
       with:
         fetch-depth: 0 # 检出完整记录
+        # ref: ${{ inputs.base_branch }} 不确定这个要不要加，后续看情况吧
 
     - name: 设置 Node.js 环境
       uses: actions/setup-node@v4
@@ -95,30 +106,37 @@ runs:
 
     - name: 设置时区
       shell: bash
-      run: sudo timedatectl set-timezone ${{ inputs.timezone }}
-
-    - name: 创建 Sitemap
-      shell: bash
+      if: ${{ runner.os == 'Linux' }}
       env:
-        LOCATION: ${{ inputs.location }}
-        BASIC_LINK: ${{ inputs.basic_link }}
-        FILE_TYPE: ${{ inputs.file_type }}
-        IGNORE_FILE: ${{ inputs.ignore_file }}
-        WEBSITE_PATH: ${{ inputs.website_path }}
-        DEBUG: ${{ inputs.debug }}
+        TZ: ${{ inputs.timezone }}
+      run: sudo timedatectl set-timezone $TZ
+
+    - name: 设置时区
+      shell: pwsh
+      if: ${{ runner.os == 'Windows' }}
+      env:
+        TZ: ${{ inputs.timezone }}
       run: |
-        # 获取生成脚本
+        tzutil /s $env:TZ
+
+    - name: 设置时区
+      shell: bash
+      if: ${{ runner.os == 'macOS' }}
+      env:
+        TZ: ${{ inputs.timezone }}
+      run: sudo systemsetup -settimezone $TZ
+
+    - name: 获取生成脚本
+      shell: bash
+      run: |
         git clone https://github.com/DuckDuckStudio/Sitemap_Creator -b main # 稳定版
-        cp Sitemap_Creator/generate-sitemap.mjs Sitemap_Creator.mjs
+        cp Sitemap_Creator/index.mjs Sitemap_Creator.mjs
         rm -r Sitemap_Creator
 
-        # 生成网站地图
-        node Sitemap_Creator.mjs
-        rm Sitemap_Creator.mjs
-
-    - name: 提交并推送 sitemap.xml
+    - name: 生成网站地图
       shell: bash
       env:
+        # 这几乎包含了所有的参数
         GH_TOKEN: ${{ inputs.token }}
         LABELS: ${{ inputs.label }}
         DEBUG: ${{ inputs.debug }}
@@ -127,203 +145,14 @@ runs:
         UPDATE: ${{ inputs.update }}
         REVIEWER: ${{ inputs.reviewer }}
         TOKEN: ${{ github.token }}
+        AUTHOR_NAME: ${{ inputs.author_name }}
+        AUTHOR_EMAIL: ${{ inputs.author_email }}
+        BASE_BRANCH: ${{ inputs.base_branch }}
+        # 生成时还需要的参数
+        BASIC_LINK: ${{ inputs.basic_link }}
+        FILE_TYPE: ${{ inputs.file_type }}
+        IGNORE_FILE: ${{ inputs.ignore_file }}
+        WEBSITE_PATH: ${{ inputs.website_path }}
       run: |
-        # 后面都要用的
-        # 获取当前日期和时间
-        DATE_TIME=$(date '+%Y/%m/%d %H:%M')
-
-        # 参数处理
-        # 格式化更新方式 - 默认 PR
-        UPDATE_WAY=$(echo "$UPDATE" | tr '[:upper:]' '[:lower:]' | sed "s/[\"\'\`-]//g; s/[[:space:]]//g")
-        # 根据输入值设置对应的更新方式
-        case "$UPDATE_WAY" in
-          "pr"|"pullrequest"|"pullrequests"|"prs"|"拉取请求")
-            UPDATE_WAY="PR"
-            if [[ "$DEBUG" ]]; then
-              echo "[DEBUG] 更新方式: 创建拉取请求"
-            fi
-
-            # 如果 AUTO_MERGE 为空字符串，则不做任何操作
-            if [[ -z "$AUTO_MERGE" ]]; then
-              if [[ "$DEBUG" ]]; then
-                echo "[DEBUG] 不启用自动合并，因为自动合并方式为空"
-              fi
-              CLEAN_AUTO_MERGE=""
-            else
-              # 格式化自动合并方式
-              CLEAN_AUTO_MERGE=$(echo "$AUTO_MERGE" | tr '[:upper:]' '[:lower:]' | sed "s/[\"\'\`-]//g")
-
-              case "$CLEAN_AUTO_MERGE" in
-                "s"|"squash"|"压缩"|"压缩合并"|"压缩自动合并")
-                  CLEAN_AUTO_MERGE="squash"
-                  ;;
-                "m"|"merge"|"合并"|"合并提交"|"提交")
-                  CLEAN_AUTO_MERGE="merge"
-                  ;;
-                "r"|"rebase"|"变基"|"变基合并"|"变基自动合并")
-                  CLEAN_AUTO_MERGE="rebase"
-                  ;;
-                *)
-                  echo "[ERROR] 未知的自动合并方式: $AUTO_MERGE"
-                  echo "[TIP] 可用的自动合并方式: 压缩、合并、变基"
-                  exit 1
-                  ;;
-              esac
-            fi
-
-            if [[ ("$AUTO_MERGE" != "$CLEAN_AUTO_MERGE") && ("$DEBUG") ]]; then
-              echo "[DEBUG] 已格式化自动合并方式: $AUTO_MERGE -> $CLEAN_AUTO_MERGE"
-            fi
-
-            # 格式化标签
-            CLEAN_LABELS=$(echo "$LABELS" | sed "s/[\"\'\`]*//g")
-            if [[ ("$LABELS" != "$CLEAN_LABELS") && ("$DEBUG") ]]; then
-              echo "[DEBUG] 标签包含特殊字符，已移除: $LABELS -> $CLEAN_LABELS"
-            fi
-
-            # 校验审查者
-            CLEAN_REVIEWER=$(echo "$REVIEWER" | sed "s/[\"\'\`]*//g")
-            if [[ ("$REVIEWER" != "$CLEAN_REVIEWER") && ("$DEBUG") ]]; then
-              echo "[DEBUG] 审查者信息包含特殊字符，已移除: $REVIEWER -> $CLEAN_REVIEWER"
-            fi
-
-            if [[ -n $CLEAN_REVIEWER ]]; then
-              IFS=',' read -r -a reviewers <<< "$CLEAN_REVIEWER"
-              # 遍历每个用户名并检查是否是协作者
-              for reviewer in "${reviewers[@]}"; do
-                # 使用 curl 发送请求，获取协作者信息
-                response=$(curl -s -w "%{http_code}" -o response.json \
-                  -H "Authorization: token $TOKEN" \
-                  "https://api.github.com/repos/${{ github.repository }}/collaborators")
-
-                # 获取响应的状态码
-                status_code=$(tail -n1 <<< "$response")
-
-                # 处理不同的 HTTP 状态码
-                case $status_code in
-                  200|201)
-                    # 请求成功，检查是否有该审查者
-                    if ! jq -e ".[] | select(.login == \"$reviewer\")" response.json > /dev/null; then
-                      echo "[ERROR] $reviewer 不是仓库的协作者"
-                      if [[ "$DEBUG" ]]; then
-                        echo "[DEBUG] GitHub API 请求返回:"
-                        while IFS= read -r line; do
-                          echo "[DEBUG] $line"
-                        done < response.json
-                        exit 1
-                      fi
-                    elif [[ "$DEBUG" ]]; then
-                      echo "[DEBUG] 审查者 $reviewer 鉴权成功"
-                    fi
-                    ;;
-                  401)
-                    echo "[ERROR] 验证审查者时出错: 鉴权失败 (401):"
-                    while IFS= read -r line; do
-                      echo "[DEBUG] $line"
-                    done < response.json
-                    exit 1
-                    ;;
-                  403)
-                    echo "[ERROR] 验证审查者时出错: 没有权限或达到速率限制 (403)"
-                    while IFS= read -r line; do
-                      echo "[DEBUG] $line"
-                    done < response.json
-                    exit 1
-                    ;;
-                  404)
-                    echo "[ERROR] 验证审查者时出错: 没有权限或仓库不存在 (404)"
-                    while IFS= read -r line; do
-                      echo "[DEBUG] $line"
-                    done < response.json
-                    exit 1
-                    ;;
-                  *)
-                    echo "[ERROR] 验证审查者时出错: 未命中的非成功状态码 ($status_code)"
-                    while IFS= read -r line; do
-                      echo "[DEBUG] $line"
-                    done < response.json
-                    exit 1
-                    ;;
-                esac
-              done
-            fi
-
-            # 签出分支
-            BRANCH_NAME="sitemap-update-$(date +%Y%m%d%H%M%S)"
-            git checkout -b $BRANCH_NAME
-            echo "[INFO] 已创建新分支: $BRANCH_NAME"
-
-            # 生成工作流 URL
-            WORKFLOW_URL="https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-            ;;
-          "commit"|"提交"|"直接提交"|"directcommit"|"commitdirectly")
-            UPDATE_WAY="Commit"
-            if [[ "$DEBUG" ]]; then
-              echo "[DEBUG] 更新方式: 直接提交到主分支"
-            fi
-            # 不得同时使用的参数
-            params=("LABELS" "AUTO_MERGE")
-
-            # 遍历参数名称数组，检查冲突
-            for param_name in "${params[@]}"; do
-              param_value="${!param_name}"
-              if [[ -n "$param_value" ]]; then
-                echo "[ERROR] 错误的参数传递"
-                echo "[TIP] $param_name 参数不得与更新方式“提交”共存"
-                exit 1
-              fi
-            done
-            ;;
-          *)
-            echo "[ERROR] 未知的更新方式: $AUTO_MERGE"
-            echo "[TIP] 可用的更新方式: 提交、拉取请求"
-            exit 1
-            ;;
-        esac
-
-        # 前面做完都要做的
-
-        # 配置 Git 用户
-        git config user.name "github-actions[bot]"
-        git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-
-        # 提交并推送 sitemap.xml
-        git add "$LOCATION"
-        git commit -m "[${DATE_TIME}] 自动更新网站地图"
-        git config --global push.autoSetupRemote true
-        git push
-
-        # 拉取请求更新后续还要做的
-        if [[ "$UPDATE_WAY" == "PR" ]]; then
-          # 创建拉取请求
-          PR_URL=$(gh pr create --title "[${DATE_TIME}] 自动更新网站地图" \
-                                --body "此拉取请求通过 [工作流](${WORKFLOW_URL}) 使用 [Sitemap Creator](https://github.com/DuckDuckStudio/Sitemap_Creator) 创建。" \
-                                --base ${{ inputs.base_branch }} \
-                                --head $BRANCH_NAME)
-          echo "[INFO] 已创建拉取请求: $PR_URL"
-
-          # 判断是否有清理后的标签并添加到 PR
-          if [[ -n "$CLEAN_LABELS" ]]; then
-            gh pr edit "$PR_URL" --add-label "$CLEAN_LABELS"
-            echo "[INFO] 已为创建的拉取请求添加标签: $CLEAN_LABELS"
-          elif [[ "$DEBUG" ]]; then
-            echo "[DEBUG] 没有有效标签，跳过添加标签"
-          fi
-
-          # 判断是否有清理后的审查者并添加到 PR
-          if [[ -n "$CLEAN_REVIEWER" ]]; then
-            gh pr edit "$PR_URL" --add-reviewer "$CLEAN_REVIEWER"
-            echo "[INFO] 已为创建的拉取请求添加审查者: $CLEAN_REVIEWER"
-          elif [[ "$DEBUG" ]]; then
-            echo "[DEBUG] 没有有效审查者，跳过添加审查者"
-          fi
-
-          # 判断是否启用自动合并
-          # 如果 CLEAN_AUTO_MERGE 有值（即设置了自动合并方式），进行后续处理
-          if [[ -n "$CLEAN_AUTO_MERGE" ]]; then
-            gh pr merge "$PR_URL" --$CLEAN_AUTO_MERGE --auto
-            echo "[INFO] 已为拉取请求启用 $CLEAN_AUTO_MERGE 合并"
-          elif [[ "$DEBUG" ]]; then
-            echo "[DEBUG] 没有有效自动合并方式，跳过启用自动合并"
-          fi
-        fi
+        node Sitemap_Creator.mjs
+        rm Sitemap_Creator.mjs
