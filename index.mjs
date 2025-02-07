@@ -161,7 +161,7 @@ async function closeOutdatedPRs() {
     const outdatedPRs = pulls.filter(pr => pr.title.includes('自动更新网站地图') && pr.base.ref === process.env.BASE_BRANCH && pr.head.ref.includes('Sitemap_Creator'));
 
     outdatedPRs.forEach(pr => {
-        execSync(`gh pr comment ${pr.number} --body "[Sitemap Creator] 此拉取请求似乎已过时，将自动关闭。"`);
+        execSync(`gh pr comment ${pr.number} --body "[[Sitemap Creator](https://github.com/DuckDuckStudio/Sitemap_Creator)] 此拉取请求似乎已过时，将自动关闭。"`);
         execSync(`gh pr close ${pr.number} --delete-branch`);
         console.log(`[INFO] 已关闭过时的拉取请求: ${pr.html_url}`);
     });
