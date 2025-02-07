@@ -106,22 +106,34 @@ runs:
 
     - name: 设置时区
       shell: bash
-      run: sudo timedatectl set-timezone ${{ inputs.timezone }}
+      if: ${{ runner.os == 'Linux' }}
+      env:
+        TZ: ${{ inputs.timezone }}
+      run: sudo timedatectl set-timezone $TZ
+
+    - name: 设置时区
+      shell: pwsh
+      if: ${{ runner.os == 'Windows' }}
+      env:
+        TZ: ${{ inputs.timezone }}
+      run: |
+        $ErrorActionPreference = 'Stop' # 有错误就停止
+        $tz = [System.TimeZoneInfo]::FindSystemTimeZoneById($env:TZ) # 获取时区
+        [System.TimeZoneInfo]::Local = $tz # 设置时区
+
+    - name: 设置时区
+      shell: bash
+      if: ${{ runner.os == 'macOS' }}
+      env:
+        TZ: ${{ inputs.timezone }}
+      run: sudo systemsetup -settimezone $TZ
 
     - name: 创建 Sitemap
       shell: bash
-      env:
-        LOCATION: ${{ inputs.location }}
-        BASIC_LINK: ${{ inputs.basic_link }}
-        FILE_TYPE: ${{ inputs.file_type }}
-        IGNORE_FILE: ${{ inputs.ignore_file }}
-        WEBSITE_PATH: ${{ inputs.website_path }}
-        DEBUG: ${{ inputs.debug }}
       run: |
         # 获取生成脚本
         git clone https://github.com/DuckDuckStudio/Sitemap_Creator -b main # 稳定版
-        cp Sitemap_Creator/generate-sitemap.mjs Sitemap_Creator.mjs
-        cp Sitemap_Creator/push.mjs Sitemap_Push.mjs
+        cp Sitemap_Creator/index.mjs Sitemap_Creator.mjs
         rm -r Sitemap_Creator
 
         # 生成网站地图
@@ -131,6 +143,7 @@ runs:
     - name: 提交并推送 sitemap.xml
       shell: bash
       env:
+        # 这几乎包含了所有的参数
         GH_TOKEN: ${{ inputs.token }}
         LABELS: ${{ inputs.label }}
         DEBUG: ${{ inputs.debug }}
@@ -142,5 +155,10 @@ runs:
         AUTHOR_NAME: ${{ inputs.author_name }}
         AUTHOR_EMAIL: ${{ inputs.author_email }}
         BASE_BRANCH: ${{ inputs.base_branch }}
+        # 生成时还需要的参数
+        BASIC_LINK: ${{ inputs.basic_link }}
+        FILE_TYPE: ${{ inputs.file_type }}
+        IGNORE_FILE: ${{ inputs.ignore_file }}
+        WEBSITE_PATH: ${{ inputs.website_path }}
       run: |
         node Sitemap_Push.mjs
