@@ -110,6 +110,27 @@ try {
 
   sitemap += `</urlset>\n`;
 
+  // 避免重复
+  let oldSitemap;
+  try {
+    oldSitemap = readFileSync(location, 'utf8');
+  } catch (error) {
+    console.error(`[ERROR] 读取旧 sitemap.xml 文件失败: ${error.message}`);
+  }
+  if (sitemap === oldSitemap) {
+    console.log('[WARNING] 网站地图没有任何修改，跳过后续处理。');
+    process.exit(0);
+  } else {
+    const oldSitemapLines = oldSitemap.split('\n');
+    oldSitemapLines.splice(1, 1);
+    const newSitemapLines = sitemap.split('\n');
+    newSitemapLines.splice(1, 1);
+    if (oldSitemapLines.join('\n') === newSitemapLines.join('\n')) {
+      console.log('[WARNING] 网站地图除了生成日期外没有任何修改，跳过后续处理。');
+      process.exit(0);
+    }
+  }
+
   // 保存 sitemap.xml 文件
   writeFileSync(location, sitemap, 'utf8');
 
