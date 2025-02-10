@@ -113,9 +113,7 @@ try {
   // 避免重复
   try {
     let oldSitemap = readFileSync(location, 'utf8');
-    if (sitemap.split('\n').splice(1).join('\n') === oldSitemap.split('\n').splice(1).join('\n')) {
-        console.log(`[DEBUG] ${oldSitemap.split('\n').splice(1).join('\n')}`);
-        console.log(`[DEBUG] ${sitemap.split('\n').splice(1).join('\n')}`);
+    if (sitemap.split('\n').splice(2).join('\n') === oldSitemap.split('\n').splice(2).join('\n')) {
         console.log('[WARNING] 网站地图没有任何修改，跳过后续处理。');
         process.exit(0);
     }
