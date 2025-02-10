@@ -132,3 +132,4 @@ dist
 # TEST
 test.*
 test/
+sitemap.xml

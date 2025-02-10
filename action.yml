@@ -117,6 +117,10 @@ runs:
       env:
         TZ: ${{ inputs.timezone }}
       run: |
+        # 如果传入的时区是 Asia/Shanghai 则转为 China Standard Time
+        if ($env:TZ -eq "Asia/Shanghai") {
+          $env:TZ = "China Standard Time"
+        }
         tzutil /s $env:TZ
 
     - name: 设置时区

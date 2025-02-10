@@ -79,17 +79,17 @@ permissions:
 #### 查看可用时区
 | Runner OS | 查看方式 | 是否支持默认时区 |
 |-----|-----|-----|
-| Windows | `TZUTIL /l` | ❌ |
+| Windows | `TZUTIL /l` | ✅ |
 | Linux | `timedatectl list-timezones` | ✅ |
 | MacOS | `systemsetup -gettimezone` | ✅ |
 
-> 注: Windows 上的时区是一定要指定的，默认的 `Asia/Shanghai` (亚洲/上海) 在 Windows 上不适用，应改用 `China Standard Time` (中国标准时间 CST) 。
+> 注: 在 Windows Runner 上，默认的 `Asia/Shanghai` (亚洲/上海) 会被转为 `China Standard Time` (中国标准时间 CST) 。
 
 ### 6. 使用示例
 ```yml
 name: 生成 Sitemap
 
-# GitHub Actiion DuckDuckStudio/Sitemap_Creator 版本 1.0.4 示例工作流
+# GitHub Actiion DuckDuckStudio/Sitemap_Creator 版本 1.0.5 示例工作流
 # https://github.com/marketplace/actions/sitemap-creator-stable
 # Under the [GNU Affero General Public License v3.0](https://github.com/DuckDuckStudio/Sitemap_Creator/blob/main/LICENSE)
 
@@ -109,7 +109,7 @@ jobs:
 
     steps:
       - name: 更新网站地图
-        uses: DuckDuckStudio/Sitemap_Creator@1.0.4
+        uses: DuckDuckStudio/Sitemap_Creator@1.0.5
         with:
           location: "docs/sitemap.xml"
           basic_link: "https://duckduckstudio.github.io/Articles/#" # docsify 部署的
