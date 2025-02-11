@@ -51,6 +51,7 @@
 # 相关文档: https://docs.github.com/zh/actions/writing-workflows/choosing-what-your-workflow-does/controlling-permissions-for-github_token
 permissions:
   contents: write # 允许修改仓库内容，例如提交、发行版等
+  pull-requests: write # 允许创建和修改 PR，如果您使用更新方式“提交”可以不给这个权限
 ```
 (如果需要拉取请求的话**设置中用于创建拉取请求的那个权限还是要勾下**)  
 
