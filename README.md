@@ -90,7 +90,7 @@ permissions:
 ```yml
 name: 生成 Sitemap
 
-# GitHub Actiion DuckDuckStudio/Sitemap_Creator 版本 1.0.5 示例工作流
+# GitHub Action DuckDuckStudio/Sitemap_Creator 版本 1.0.5 示例工作流
 # https://github.com/marketplace/actions/sitemap-creator-stable
 # Under the [GNU Affero General Public License v3.0](https://github.com/DuckDuckStudio/Sitemap_Creator/blob/main/LICENSE)
 
