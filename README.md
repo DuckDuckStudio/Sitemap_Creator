@@ -90,7 +90,7 @@ permissions:
 ```yml
 name: 生成 Sitemap
 
-# GitHub Action DuckDuckStudio/Sitemap_Creator 版本 1.0.5 示例工作流
+# GitHub Action DuckDuckStudio/Sitemap_Creator 版本 1.0.6 示例工作流
 # https://github.com/marketplace/actions/sitemap-creator-pre-release
 # Under the [GNU Affero General Public License v3.0](https://github.com/DuckDuckStudio/Sitemap_Creator/blob/main/LICENSE)
 
@@ -110,7 +110,7 @@ jobs:
 
     steps:
       - name: 更新网站地图
-        uses: fjwxzde/Sitemap_Creator_Pre-Release@1.0.4.2
+        uses: fjwxzde/Sitemap_Creator_Pre-Release@1.0.5.1
         with:
           location: "docs/sitemap.xml"
           basic_link: "https://duckduckstudio.github.io/Articles/#" # docsify 部署的
