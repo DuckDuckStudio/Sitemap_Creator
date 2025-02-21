@@ -93,10 +93,6 @@ runs:
       with:
         node-version: "latest"
 
-    - name: 获取依赖
-      shell: bash
-      run: npm install
-
     - name: 设置时区
       shell: bash
       if: ${{ runner.os == 'Linux' }}
