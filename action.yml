@@ -93,10 +93,6 @@ runs:
       with:
         node-version: "latest"
 
-    - name: 获取依赖
-      shell: bash
-      run: npm install
-
     - name: 设置时区
       shell: bash
       if: ${{ runner.os == 'Linux' }}
@@ -128,10 +124,15 @@ runs:
       run: |
         git clone https://github.com/DuckDuckStudio/Sitemap_Creator -b main # 稳定版
         cp Sitemap_Creator/index.mjs Sitemap_Creator.mjs
+        cp Sitemap_Creator/package.json package.json
+        cp Sitemap_Creator/package-lock.json package-lock.json
         rm -r Sitemap_Creator
+        npm install
 
     - name: 生成网站地图
       shell: bash
       run: |
         node Sitemap_Creator.mjs
         rm Sitemap_Creator.mjs
+        rm package.json
+        rm package-lock.json
