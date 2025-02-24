@@ -2,134 +2,171 @@ import { writeFileSync, readFileSync, readdirSync, statSync } from 'fs';
 import path from 'path';
 import { execFileSync } from 'child_process';
 import https from 'https';
-import { getInput } from  '@actions/core';
+import { platform } from 'process';
+import { getInput } from '@actions/core';
 // getInput() 等效于: https://github.com/actions/toolkit/blob/662b9d91f584bf29efbc41b86723e0e376010e41/packages/core/src/core.ts#L126-L138
 
+// 设置时区
+// https://github.com/szenius/set-timezone/blob/eebc20b7dc3d0f0832339f7046227a6b32fb44c3/index.mjs - MIT LICENSE
+// 许可证文件 https://github.com/szenius/set-timezone/blob/eebc20b7dc3d0f0832339f7046227a6b32fb44c3/LICENSE
+try {
+    const timezone = getInput("timezone");
+    switch (platform) {
+        case "linux":
+            // const linuxTimezone = getInput("timezoneLinux");
+            // await execCommand("sudo", ["timedatectl", "set-timezone", linuxTimezone]);
+            execFileSync("sudo", ["timedatectl", "set-timezone", timezone]);
+            break;
+        case "darwin":
+            // const darwinTimezone = getInput("timezoneMacos");
+            // await execCommand("sudo", ["systemsetup", "-settimezone", darwinTimezone]);
+            execFileSync("sudo", ["systemsetup", "-settimezone", timezone]);
+            break;
+        case "win32":
+            // const win32Timezone = getInput("timezoneWindows");
+            // await execCommand("tzutil", ["/s", win32Timezone]);
+            execFileSync("tzutil", ["/s", timezone]);
+            break;
+        default:
+            // setFailed(
+            //     `Platform ${platform} not supported; Only linux, darwin or win32 are supported now`
+            // );
+            console.error('[ERROR] 设置时区时出错: 不支持的平台');
+            process.exit(1);
+    }
+} catch (error) {
+    // setFailed(error.message); - 直接使用几乎相同的处理
+    console.error('[ERROR] 设置时区时出错:', error.message);
+    process.exit(1);
+}
+
+// ========================================================
+
 // 必要参数
-let now = new Date();
+const now = new Date();
 
 try {
-  // 必要参数
-  const location = getInput("location");
-  const basicLink = getInput("basic_link");
-  const fileType = getInput("file_type");
-  const fileTypes = fileType.split(',').map(type => type.trim());
-  const ignoreFile = getInput("ignore_file");
-  const ignorePatterns = ignoreFile.split(',').map(item => item.trim());
-  const websitePath = getInput("website_path");
-  const debug = getInput("debug");
+    // 必要参数
+    const location = getInput("location");
+    const basicLink = getInput("basic_link");
+    const fileType = getInput("file_type");
+    const fileTypes = fileType.split(',').map(type => type.trim());
+    const ignoreFile = getInput("ignore_file");
+    const ignorePatterns = ignoreFile.split(',').map(item => item.trim());
+    const websitePath = getInput("website_path");
+    const debug = getInput("debug");
 
-  const urls = new Set();
+    const urls = new Set();
 
-  console.log(`[DEBUG] Debug状态: ${debug}`)
-  if (debug) {
-    console.log(`[DEBUG] 网站地图存放路径: ${location}`)
-    console.log(`[DEBUG] 网站基础链接: ${basicLink}`)
-    console.log(`[DEBUG] 网站文件存放路径: ${websitePath}`)
-    console.log(`[DEBUG] 页面文件类型: ${fileTypes}`)
-    console.log(`[DEBUG] 忽略的文件: ${ignorePatterns}`)
-  }
-  // -----------------
-
-  // 通过 Git 命令，获取文件的最后提交日期
-  function getLastCommitDate(filePath) {
-    try {
-      // 使用 git log 命令获取最后一次提交的时间
-      const result = execFileSync('git', ['log', '-1', '--format=%cI', '--', filePath], { cwd: websitePath });
-      const lastCommitDate = result.toString().trim();
-      return lastCommitDate
-    } catch (err) {
-      console.error(`[ERROR] 获取 ${filePath} 的最后提交时间失败: `, err);
-      return ''; // 出错时返回空字符串
+    console.log(`[DEBUG] Debug状态: ${debug}`)
+    if (debug) {
+        console.log(`[DEBUG] 网站地图存放路径: ${location}`)
+        console.log(`[DEBUG] 网站基础链接: ${basicLink}`)
+        console.log(`[DEBUG] 网站文件存放路径: ${websitePath}`)
+        console.log(`[DEBUG] 页面文件类型: ${fileTypes}`)
+        console.log(`[DEBUG] 忽略的文件: ${ignorePatterns}`)
     }
-  }
+    // -----------------
 
-  // 扫描目录并生成 URL 列表
-  function scanDirectory(dir) {
-    const files = readdirSync(dir);
-    files.forEach(file => {
-      const fullPath = path.join(dir, file);
-      const stat = statSync(fullPath);
+    // 通过 Git 命令，获取文件的最后提交日期
+    function getLastCommitDate(filePath) {
+        try {
+            // 使用 git log 命令获取最后一次提交的时间
+            const result = execFileSync('git', ['log', '-1', '--format=%cI', '--', filePath], { cwd: websitePath });
+            const lastCommitDate = result.toString().trim();
+            return lastCommitDate
+        } catch (err) {
+            console.error(`[ERROR] 获取 ${filePath} 的最后提交时间失败: `, err);
+            return ''; // 出错时返回空字符串
+        }
+    }
 
-      // 如果是目录，递归扫描
-      if (stat.isDirectory()) {
-        scanDirectory(fullPath);
-      } else if (fileTypes.includes(path.extname(file).slice(1))) {
-        const relativePath = path.relative(websitePath, fullPath).replace(/\\/g, '/');
+    // 扫描目录并生成 URL 列表
+    function scanDirectory(dir) {
+        const files = readdirSync(dir);
+        files.forEach(file => {
+            const fullPath = path.join(dir, file);
+            const stat = statSync(fullPath);
 
-        // 如果当前路径在忽略列表中，则跳过
-        if (ignorePatterns.some(pattern => {
-          if (relativePath.includes(pattern)) {
-            if (debug) {
-              console.log(`[DEBUG] 跳过文件 [${fullPath}] 因为其路径中包含 [${pattern}]`);
+            // 如果是目录，递归扫描
+            if (stat.isDirectory()) {
+                scanDirectory(fullPath);
+            } else if (fileTypes.includes(path.extname(file).slice(1))) {
+                const relativePath = path.relative(websitePath, fullPath).replace(/\\/g, '/');
+
+                // 如果当前路径在忽略列表中，则跳过
+                if (ignorePatterns.some(pattern => {
+                    if (relativePath.includes(pattern)) {
+                        if (debug) {
+                            console.log(`[DEBUG] 跳过文件 [${fullPath}] 因为其路径中包含 [${pattern}]`);
+                        }
+                        return true; // 如果找到了匹配的模式，返回 true，表示该文件应被忽略
+                    }
+                    return false; // 如果没有找到匹配的模式，返回 false，继续检查下一个模式
+                })) {
+                    return; // 如果前面 true 跳过此文件
+                }
+
+                const lastmod = getLastCommitDate(relativePath); // 获取文件最后提交时间
+                const encodedPath = encodeURIComponent(relativePath).replace(/%2F/g, '/'); // 对路径进行编码并替换%2F为/
+
+                // 删除 URL 中的 `.md` 后缀
+                const urlWithoutMd = encodedPath.replace(/\.md$/, '');
+
+                const fullUrl = `${basicLink}/${urlWithoutMd}`;
+
+                // 只在获取到有效的 lastmod 时添加 <lastmod> 标签
+                const urlTag = `  <url>\n    <loc>${fullUrl}</loc>`;
+                if (lastmod) {
+                    // 如果 lastmod 存在，添加 <lastmod>
+                    urls.add(`${urlTag}\n    <lastmod>${lastmod}</lastmod>\n  </url>`);
+                } else {
+                    // 如果没有 lastmod，直接添加 <loc>
+                    urls.add(`${urlTag}\n  </url>`);
+                }
             }
-            return true; // 如果找到了匹配的模式，返回 true，表示该文件应被忽略
-          }
-          return false; // 如果没有找到匹配的模式，返回 false，继续检查下一个模式
-        })) {
-          return; // 如果前面 true 跳过此文件
-        }
+        });
+    }
 
-        const lastmod = getLastCommitDate(relativePath); // 获取文件最后提交时间
-        const encodedPath = encodeURIComponent(relativePath).replace(/%2F/g, '/'); // 对路径进行编码并替换%2F为/
+    scanDirectory(websitePath);
 
-        // 删除 URL 中的 `.md` 后缀
-        const urlWithoutMd = encodedPath.replace(/\.md$/, '');
+    // 获取当前日期并格式化
+    const currentDate = now.toISOString();
 
-        const fullUrl = `${basicLink}/${urlWithoutMd}`;
-
-        // 只在获取到有效的 lastmod 时添加 <lastmod> 标签
-        const urlTag = `  <url>\n    <loc>${fullUrl}</loc>`;
-        if (lastmod) {
-          // 如果 lastmod 存在，添加 <lastmod>
-          urls.add(`${urlTag}\n    <lastmod>${lastmod}</lastmod>\n  </url>`);
-        } else {
-          // 如果没有 lastmod，直接添加 <loc>
-          urls.add(`${urlTag}\n  </url>`);
-        }
-      }
-    });
-  }
-
-  scanDirectory(websitePath);
-
-  // 获取当前日期并格式化
-  const currentDate = now.toISOString();
-
-  // 创建 sitemap.xml 文件内容
-  let sitemap = `<?xml version="1.0" encoding="UTF-8"?>\n`;
-  sitemap += `<!-- 生成日期: ${currentDate} -->\n`; // 添加生成日期的注释
-  sitemap += `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" 
+    // 创建 sitemap.xml 文件内容
+    let sitemap = `<?xml version="1.0" encoding="UTF-8"?>\n`;
+    sitemap += `<!-- 生成日期: ${currentDate} -->\n`; // 添加生成日期的注释
+    sitemap += `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" 
               xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
               xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9 
                                   http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">\n\n`;
 
-  // 生成 URL 列表
-  urls.forEach(url => {
-    sitemap += url; // 每个 URL 包含 <loc> 和可能的 <lastmod>
-    sitemap += `\n`; // 添加换行
-  });
+    // 生成 URL 列表
+    urls.forEach(url => {
+        sitemap += url; // 每个 URL 包含 <loc> 和可能的 <lastmod>
+        sitemap += `\n`; // 添加换行
+    });
 
-  sitemap += `</urlset>\n`;
+    sitemap += `</urlset>\n`;
 
-  // 避免重复
-  try {
-    let oldSitemap = readFileSync(location, 'utf8');
-    if (sitemap.split('\n').splice(2).join('\n') === oldSitemap.split('\n').splice(2).join('\n')) {
-        console.log('[WARNING] 网站地图没有任何修改，跳过后续处理。');
-        process.exit(0);
+    // 避免重复
+    try {
+        let oldSitemap = readFileSync(location, 'utf8');
+        if (sitemap.split('\n').splice(2).join('\n') === oldSitemap.split('\n').splice(2).join('\n')) {
+            console.log('[WARNING] 网站地图没有任何修改，跳过后续处理。');
+            process.exit(0);
+        }
+    } catch (error) {
+        console.error(`[ERROR] 读取旧 sitemap.xml 文件失败: ${error.message}`);
     }
-  } catch (error) {
-    console.error(`[ERROR] 读取旧 sitemap.xml 文件失败: ${error.message}`);
-  }
 
-  // 保存 sitemap.xml 文件
-  writeFileSync(location, sitemap, 'utf8');
+    // 保存 sitemap.xml 文件
+    writeFileSync(location, sitemap, 'utf8');
 
-  console.log(`[INFO] 已成功生成并保存为 ${location}`);
+    console.log(`[INFO] 已成功生成并保存为 ${location}`);
 } catch (error) {
-  console.error('[ERROR] 生成 Sitemap 时发生错误:', error.message);
-  process.exit(1);
+    console.error('[ERROR] 生成 Sitemap 时发生错误:', error.message);
+    process.exit(1);
 }
 
 // 自动关闭过时的更新请求
@@ -180,7 +217,7 @@ async function closeOutdatedPRs() {
     });
 }
 
-try{
+try {
     // 获取当前日期和时间
     const DATE_TIME = now.toISOString().replace(/T/, ' ').replace(/\..+/, '');
 
@@ -291,7 +328,6 @@ try{
             }
         }
 
-        const now = new Date();
         BRANCH_NAME = `Sitemap_Creator-${now.getFullYear()}${(now.getMonth() + 1).toString().padStart(2, '0')}${now.getDate().toString().padStart(2, '0')}${now.getHours().toString().padStart(2, '0')}${now.getMinutes().toString().padStart(2, '0')}${now.getSeconds().toString().padStart(2, '0')}`;
         execFileSync('git', ['checkout', '-b', BRANCH_NAME]);
         console.log(`[INFO] 已创建新分支: ${BRANCH_NAME}`);

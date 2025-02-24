@@ -110,7 +110,7 @@ jobs:
 
     steps:
       - name: 更新网站地图
-        uses: fjwxzde/Sitemap_Creator_Pre-Release@1.0.5.1
+        uses: fjwxzde/Sitemap_Creator_Pre-Release@1.0.5.2
         with:
           location: "docs/sitemap.xml"
           basic_link: "https://duckduckstudio.github.io/Articles/#" # docsify 部署的
@@ -129,6 +129,10 @@ jobs:
           # author_email: "41898282+github-actions[bot]@users.noreply.github.com"
 ```
 
-## 星星🌟
+## 星星 🌟
 如果您认为本项目对您有帮助，还请给本项目一个小小的 Star 。  
 [![星标历史](https://api.star-history.com/svg?repos=DuckDuckStudio/Sitemap_Creator&type=Date)](https://star-history.com/#DuckDuckStudio/Sitemap_Creator&Date)  
+
+## 鸣谢 🙇‍
+### 使用的开源项目
+- [Set Timezone Action by Sze Ying](https://github.com/szenius/set-timezone/) - [MIT License](https://github.com/szenius/set-timezone/blob/eebc20b7dc3d0f0832339f7046227a6b32fb44c3/LICENSE)
