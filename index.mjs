@@ -25,6 +25,10 @@ try {
         case "win32":
             // const win32Timezone = getInput("timezoneWindows");
             // await execCommand("tzutil", ["/s", win32Timezone]);
+            if (timezone === "Asia/Shanghai") {
+                // 转换默认时区设置
+                timezone = "China Standard Time";
+            }
             execFileSync("tzutil", ["/s", timezone]);
             break;
         default:
