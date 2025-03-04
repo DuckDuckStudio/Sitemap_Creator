@@ -5,20 +5,17 @@ import https from 'https';
 
 // 必要参数
 const now = new Date();
+const location = process.env.LOCATION;
+const basicLink = process.env.BASIC_LINK;
+const fileType = process.env.FILE_TYPE;
+const fileTypes = fileType.split(',').map(type => type.trim());
+const ignoreFile = process.env.IGNORE_FILE;
+const ignorePatterns = ignoreFile.split(',').map(item => item.trim());
+const websitePath = process.env.WEBSITE_PATH;
+const debug = process.env.DEBUG;
+const urls = new Set();
 
 try {
-    // 必要参数
-    const location = process.env.LOCATION;
-    const basicLink = process.env.BASIC_LINK;
-    const fileType = process.env.FILE_TYPE;
-    const fileTypes = fileType.split(',').map(type => type.trim());
-    const ignoreFile = process.env.IGNORE_FILE;
-    const ignorePatterns = ignoreFile.split(',').map(item => item.trim());
-    const websitePath = process.env.WEBSITE_PATH;
-    const debug = process.env.DEBUG;
-
-    const urls = new Set();
-
     console.log(`[DEBUG] Debug状态: ${debug}`)
     if (debug) {
         console.log(`[DEBUG] 网站地图存放路径: ${location}`)
