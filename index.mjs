@@ -135,7 +135,7 @@ try {
     scanDirectory(websitePath);
 
     // 获取当前日期并格式化
-    const currentDate = now.toISOString();
+    const currentDate = now.toLocaleString();
 
     // 创建 sitemap.xml 文件内容
     let sitemap = `<?xml version="1.0" encoding="UTF-8"?>\n`;
@@ -223,7 +223,7 @@ async function closeOutdatedPRs() {
 
 try {
     // 获取当前日期和时间
-    const DATE_TIME = now.toISOString().replace(/T/, ' ').replace(/\..+/, '');
+    const DATE_TIME = now.toLocaleString();
 
     // 提交者名和邮箱
     const AUTHOR_NAME = getInput("author_name").replace(/[\"\'\`]/g, '');
