@@ -90,7 +90,7 @@ permissions:
 ```yml
 name: 生成 Sitemap
 
-# GitHub Action DuckDuckStudio/Sitemap_Creator 版本 1.0.5 示例工作流
+# GitHub Action DuckDuckStudio/Sitemap_Creator 版本 1.0.6 示例工作流
 # https://github.com/marketplace/actions/sitemap-creator-stable
 # Under the [GNU Affero General Public License v3.0](https://github.com/DuckDuckStudio/Sitemap_Creator/blob/main/LICENSE)
 
@@ -110,7 +110,7 @@ jobs:
 
     steps:
       - name: 更新网站地图
-        uses: DuckDuckStudio/Sitemap_Creator@1.0.5
+        uses: DuckDuckStudio/Sitemap_Creator@1.0.6
         with:
           location: "docs/sitemap.xml"
           basic_link: "https://duckduckstudio.github.io/Articles/#" # docsify 部署的
@@ -125,8 +125,10 @@ jobs:
           # token: ${{ github.token }}
           # timezone: "Asia/Shanghai"
           # update: "拉取请求"
+          # author_name: "github-actions[bot]"
+          # author_email: "41898282+github-actions[bot]@users.noreply.github.com"
 ```
 
-## 星星🌟
+## 星星 🌟
 如果您认为本项目对您有帮助，还请给本项目一个小小的 Star 。  
 [![星标历史](https://api.star-history.com/svg?repos=DuckDuckStudio/Sitemap_Creator&type=Date)](https://star-history.com/#DuckDuckStudio/Sitemap_Creator&Date)  
