@@ -6,41 +6,30 @@ branding:
   color: yellow
   icon: book
 
-keywords:
-  [
-    'sitemap',
-    'website',
-    'seo',
-    'creator',
-    'updater',
-    'generator',
-    'urls'
-  ]
-
 inputs:
   location:
     required: false
-    description: 网站地图的存放位置 (例如 docs/sitemap.xml)
+    description: 网站地图的存放位置
     default: "./sitemap.xml"
 
   token:
     required: false
-    description: 用于创建更新网站地图的拉取请求的 Token (不指定则使用 github.token)
+    description: 用于创建更新网站地图的拉取请求的 Token
     default: ${{ github.token }}
 
   timezone:
     required: false
-    description: 设置生成时使用的时区 (不指定则使用 Asia/Shanghai (UTF+8))
+    description: 设置生成时使用的时区
     default: "Asia/Shanghai"
 
   basic_link:
     required: false
-    description: 指向你网站的基础链接 (不指定则使用 GitHub Page 链接, 结尾不要带 / )
+    description: 指向你网站的基础链接
     default: https://${{ github.event.repository.owner.login }}.github.io/${{ github.event.repository.name }}
 
   file_type:
     required: false
-    description: 网页文件的类型 (例如使用 docsify 部署的就是 md，可指定多个类型)
+    description: 网页文件的类型
     default: "html,md"
 
   ignore_file:
@@ -50,12 +39,12 @@ inputs:
 
   website_path:
     required: true
-    description: 你的网站内容的位置 (例如 . (根目录) 或 docs)
+    description: 你的网站内容的位置
     default: "./"
 
   base_branch:
     required: false
-    description: 仓库主分支 (main，master 等)
+    description: 仓库主分支
     default: main
 
   debug:
