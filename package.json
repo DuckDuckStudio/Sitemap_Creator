@@ -25,8 +25,5 @@
   "main": "index.mjs",
   "scripts": {
     "test": "node index.mjs"
-  },
-  "dependencies": {
-    "@actions/core": "^1.11.1"
   }
 }

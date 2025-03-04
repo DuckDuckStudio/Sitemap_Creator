@@ -131,6 +131,24 @@ runs:
 
     - name: 生成网站地图
       shell: bash
+      env:
+        # 这几乎包含了所有的参数
+        GH_TOKEN: ${{ inputs.token }}
+        LABELS: ${{ inputs.label }}
+        DEBUG: ${{ inputs.debug }}
+        AUTO_MERGE: ${{ inputs.auto_merge }}
+        LOCATION: ${{ inputs.location }}
+        UPDATE: ${{ inputs.update }}
+        REVIEWER: ${{ inputs.reviewer }}
+        TOKEN: ${{ github.token }}
+        AUTHOR_NAME: ${{ inputs.author_name }}
+        AUTHOR_EMAIL: ${{ inputs.author_email }}
+        BASE_BRANCH: ${{ inputs.base_branch }}
+        # 生成时还需要的参数
+        BASIC_LINK: ${{ inputs.basic_link }}
+        FILE_TYPE: ${{ inputs.file_type }}
+        IGNORE_FILE: ${{ inputs.ignore_file }}
+        WEBSITE_PATH: ${{ inputs.website_path }}
       run: |
         node Sitemap_Creator.mjs
         rm Sitemap_Creator.mjs

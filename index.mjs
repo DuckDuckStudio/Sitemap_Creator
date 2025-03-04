@@ -2,22 +2,20 @@ import { writeFileSync, readFileSync, readdirSync, statSync } from 'fs';
 import path from 'path';
 import { execFileSync } from 'child_process';
 import https from 'https';
-import { getInput } from '@actions/core';
-// getInput() 等效于: https://github.com/actions/toolkit/blob/662b9d91f584bf29efbc41b86723e0e376010e41/packages/core/src/core.ts#L126-L138
 
 // 必要参数
 const now = new Date();
 
 try {
     // 必要参数
-    const location = getInput("location");
-    const basicLink = getInput("basic_link");
-    const fileType = getInput("file_type");
+    const location = process.env.LOCATION;
+    const basicLink = process.env.BASIC_LINK;
+    const fileType = process.env.FILE_TYPE;
     const fileTypes = fileType.split(',').map(type => type.trim());
-    const ignoreFile = getInput("ignore_file");
+    const ignoreFile = process.env.IGNORE_FILE;
     const ignorePatterns = ignoreFile.split(',').map(item => item.trim());
-    const websitePath = getInput("website_path");
-    const debug = getInput("debug");
+    const websitePath = process.env.WEBSITE_PATH;
+    const debug = process.env.DEBUG;
 
     const urls = new Set();
 
@@ -138,7 +136,7 @@ async function closeOutdatedPRs() {
         hostname: 'api.github.com',
         path: `/repos/${process.env.GITHUB_REPOSITORY}/pulls?state=open&per_page=100`,
         headers: {
-            'Authorization': `token ${getInput("token")}`,
+            'Authorization': `token ${process.env.TOKEN}`,
             'User-Agent': 'node.js'
         }
     };
@@ -171,7 +169,7 @@ async function closeOutdatedPRs() {
         page++;
     } while (fetchedPRs.length === 100);
 
-    const outdatedPRs = pulls.filter(pr => pr.title.includes('自动更新网站地图') && pr.base.ref === getInput("base_branch") && pr.head.ref.includes('Sitemap_Creator'));
+    const outdatedPRs = pulls.filter(pr => pr.title.includes('自动更新网站地图') && pr.base.ref === process.env.BASE_BRANCH && pr.head.ref.includes('Sitemap_Creator'));
 
     outdatedPRs.forEach(pr => {
         execFileSync('gh', ['pr', 'comment', pr.number, '--body', "[[Sitemap Creator](https://github.com/DuckDuckStudio/Sitemap_Creator)] 此拉取请求似乎已过时，将自动关闭。"]);
@@ -185,11 +183,11 @@ try {
     const DATE_TIME = now.toLocaleString();
 
     // 提交者名和邮箱
-    const AUTHOR_NAME = getInput("author_name").replace(/[\"\'\`]/g, '');
-    const AUTHOR_EMAIL = getInput("author_email").replace(/[\"\'\`]/g, '');
+    const AUTHOR_NAME = process.env.AUTHOR_NAME.replace(/[\"\'\`]/g, '');
+    const AUTHOR_EMAIL = process.env.AUTHOR_EMAIL.replace(/[\"\'\`]/g, '');
 
     // 参数处理
-    let UPDATE_WAY = getInput("update").toLowerCase().replace(/[\"\'\`-]/g, '').replace(/\s/g, '');
+    let UPDATE_WAY = process.env.UPDATE.toLowerCase().replace(/[\"\'\`-]/g, '').replace(/\s/g, '');
     let CLEAN_AUTO_MERGE = '';
     let CLEAN_LABELS = '';
     let CLEAN_REVIEWER = '';
@@ -201,12 +199,12 @@ try {
             console.log('[DEBUG] 更新方式: 创建拉取请求');
         }
 
-        if (!getInput("auto_merge")) {
+        if (!process.env.AUTO_MERGE) {
             if (debug) {
                 console.log('[DEBUG] 不启用自动合并，因为自动合并方式为空');
             }
         } else {
-            CLEAN_AUTO_MERGE = getInput("auto_merge").toLowerCase().replace(/[\"\'\`-]/g, '');
+            CLEAN_AUTO_MERGE = process.env.AUTO_MERGE.toLowerCase().replace(/[\"\'\`-]/g, '');
             if (['s', 'squash', '压缩', '压缩合并', '压缩自动合并'].includes(CLEAN_AUTO_MERGE)) {
                 CLEAN_AUTO_MERGE = 'squash';
             } else if (['m', 'merge', '合并', '合并提交', '提交'].includes(CLEAN_AUTO_MERGE)) {
@@ -214,24 +212,24 @@ try {
             } else if (['r', 'rebase', '变基', '变基合并', '变基自动合并'].includes(CLEAN_AUTO_MERGE)) {
                 CLEAN_AUTO_MERGE = 'rebase';
             } else {
-                console.error(`[ERROR] 未知的自动合并方式: ${getInput("auto_merge")}`);
+                console.error(`[ERROR] 未知的自动合并方式: ${process.env.AUTO_MERGE}`);
                 console.error('[TIP] 可用的自动合并方式: 压缩、合并、变基');
                 process.exit(1);
             }
         }
 
-        if (getInput("auto_merge") !== CLEAN_AUTO_MERGE && debug) {
-            console.log(`[DEBUG] 已格式化自动合并方式: ${getInput("auto_merge")} -> ${CLEAN_AUTO_MERGE}`);
+        if (process.env.AUTO_MERGE !== CLEAN_AUTO_MERGE && debug) {
+            console.log(`[DEBUG] 已格式化自动合并方式: ${process.env.AUTO_MERGE} -> ${CLEAN_AUTO_MERGE}`);
         }
 
-        CLEAN_LABELS = getInput("label").replace(/[\"\'\`]/g, '');
-        if (getInput("label") !== CLEAN_LABELS && debug) {
-            console.log(`[DEBUG] 标签包含特殊字符，已移除: ${getInput("label")} -> ${CLEAN_LABELS}`);
+        CLEAN_LABELS = process.env.LABELS.replace(/[\"\'\`]/g, '');
+        if (process.env.LABELS !== CLEAN_LABELS && debug) {
+            console.log(`[DEBUG] 标签包含特殊字符，已移除: ${process.env.LABELS} -> ${CLEAN_LABELS}`);
         }
 
-        CLEAN_REVIEWER = getInput("reviewer").replace(/[\"\'\`]/g, '');
-        if (getInput("reviewer") !== CLEAN_REVIEWER && debug) {
-            console.log(`[DEBUG] 审查者信息包含特殊字符，已移除: ${getInput("reviewer")} -> ${CLEAN_REVIEWER}`);
+        CLEAN_REVIEWER = process.env.REVIEWER.replace(/[\"\'\`]/g, '');
+        if (process.env.REVIEWER !== CLEAN_REVIEWER && debug) {
+            console.log(`[DEBUG] 审查者信息包含特殊字符，已移除: ${process.env.REVIEWER} -> ${CLEAN_REVIEWER}`);
         }
 
         if (CLEAN_REVIEWER) {
@@ -240,7 +238,7 @@ try {
                 hostname: 'api.github.com',
                 path: `/repos/${process.env.GITHUB_REPOSITORY}/collaborators`,
                 headers: {
-                    'Authorization': `token ${getInput("token")}`,
+                    'Authorization': `token ${process.env.TOKEN}`,
                     'User-Agent': 'node.js'
                 }
             };
@@ -309,9 +307,9 @@ try {
                 process.exit(1);
             }
         });
-        BRANCH_NAME = getInput("base_branch"); // 直接提交直接推到基分支
+        BRANCH_NAME = process.env.BASE_BRANCH; // 直接提交直接推到基分支
     } else {
-        console.error(`[ERROR] 未知的更新方式: ${getInput("auto_merge")}`);
+        console.error(`[ERROR] 未知的更新方式: ${process.env.AUTO_MERGE}`);
         console.error('[TIP] 可用的更新方式: 提交、拉取请求');
         process.exit(1);
     }
@@ -321,7 +319,7 @@ try {
     execFileSync('git', ['config', 'user.email', AUTHOR_EMAIL]);
 
     // 提交并推送 sitemap.xml
-    execFileSync('git', ['add', getInput('location')]);
+    execFileSync('git', ['add', process.env.LOCATION]);
     execFileSync('git', ['commit', '-m', `[${DATE_TIME}] 自动更新网站地图`]);
     execFileSync('git', ['push', '--set-upstream', 'origin', BRANCH_NAME]);
 
