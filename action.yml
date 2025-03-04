@@ -124,9 +124,6 @@ runs:
       run: |
         git clone https://github.com/DuckDuckStudio/Sitemap_Creator -b main # 稳定版
         cp Sitemap_Creator/index.mjs Sitemap_Creator.mjs
-        cp Sitemap_creator/package.json package.json
-        cp Sitemap_Creator/package-lock.json package-lock.json
-        npm install
         rm -r Sitemap_Creator
 
     - name: 生成网站地图
@@ -152,5 +149,3 @@ runs:
       run: |
         node Sitemap_Creator.mjs
         rm Sitemap_Creator.mjs
-        rm package.json
-        rm package-lock.json
