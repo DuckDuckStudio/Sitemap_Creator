@@ -2,49 +2,8 @@ import { writeFileSync, readFileSync, readdirSync, statSync } from 'fs';
 import path from 'path';
 import { execFileSync } from 'child_process';
 import https from 'https';
-import { platform } from 'process';
 import { getInput } from '@actions/core';
 // getInput() 等效于: https://github.com/actions/toolkit/blob/662b9d91f584bf29efbc41b86723e0e376010e41/packages/core/src/core.ts#L126-L138
-
-// 设置时区
-// https://github.com/szenius/set-timezone/blob/eebc20b7dc3d0f0832339f7046227a6b32fb44c3/index.mjs - MIT LICENSE
-// 许可证文件 https://github.com/szenius/set-timezone/blob/eebc20b7dc3d0f0832339f7046227a6b32fb44c3/LICENSE
-try {
-    const timezone = getInput("timezone");
-    switch (platform) {
-        case "linux":
-            // const linuxTimezone = getInput("timezoneLinux");
-            // await execCommand("sudo", ["timedatectl", "set-timezone", linuxTimezone]);
-            execFileSync("sudo", ["timedatectl", "set-timezone", timezone]);
-            break;
-        case "darwin":
-            // const darwinTimezone = getInput("timezoneMacos");
-            // await execCommand("sudo", ["systemsetup", "-settimezone", darwinTimezone]);
-            execFileSync("sudo", ["systemsetup", "-settimezone", timezone]);
-            break;
-        case "win32":
-            // const win32Timezone = getInput("timezoneWindows");
-            // await execCommand("tzutil", ["/s", win32Timezone]);
-            if (timezone === "Asia/Shanghai") {
-                // 转换默认时区设置
-                timezone = "China Standard Time";
-            }
-            execFileSync("tzutil", ["/s", timezone]);
-            break;
-        default:
-            // setFailed(
-            //     `Platform ${platform} not supported; Only linux, darwin or win32 are supported now`
-            // );
-            console.error('[ERROR] 设置时区时出错: 不支持的平台');
-            process.exit(1);
-    }
-} catch (error) {
-    // setFailed(error.message); - 直接使用几乎相同的处理
-    console.error('[ERROR] 设置时区时出错:', error.message);
-    process.exit(1);
-}
-
-// ========================================================
 
 // 必要参数
 const now = new Date();
