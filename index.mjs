@@ -6,7 +6,7 @@ import https from 'https';
 // 必要参数
 const now = new Date();
 const location = process.env.LOCATION;
-const basicLink = process.env.BASIC_LINK;
+let basicLink = process.env.BASIC_LINK;
 const fileType = process.env.FILE_TYPE;
 const fileTypes = fileType.split(',').map(type => type.trim());
 const ignoreFile = process.env.IGNORE_FILE;
@@ -14,6 +14,16 @@ const ignorePatterns = ignoreFile.split(',').map(item => item.trim());
 const websitePath = process.env.WEBSITE_PATH;
 const debug = process.env.DEBUG;
 const urls = new Set();
+
+console.log(`[DEBUG] Debug状态: ${debug}`)
+
+// 去除基础链接末尾的斜杠 - #16
+if (basicLink.endsWith('/')) {
+    basicLink = basicLink.slice(0, -1);
+    if (debug) {
+        console.log(`[DEBUG] 已自动去除基础链接末尾的斜杠，更新后的基础链接是: ${basicLink}`);
+    }
+}
 
 // 通过 Git 命令，获取文件的最后提交日期
 function getLastCommitDate(filePath) {
@@ -75,7 +85,6 @@ function scanDirectory(dir) {
 }
 
 try {
-    console.log(`[DEBUG] Debug状态: ${debug}`)
     if (debug) {
         console.log(`[DEBUG] 网站地图存放路径: ${location}`)
         console.log(`[DEBUG] 网站基础链接: ${basicLink}`)
