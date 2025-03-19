@@ -15,6 +15,11 @@ const websitePath = process.env.WEBSITE_PATH;
 const debug = process.env.DEBUG;
 const urls = new Set();
 
+// 去除基础链接末尾的斜杠 - #16
+if (basicLink.endsWith('/')) {
+    basicLink = basicLink.slice(0, -1);
+}
+
 // 通过 Git 命令，获取文件的最后提交日期
 function getLastCommitDate(filePath) {
     try {
