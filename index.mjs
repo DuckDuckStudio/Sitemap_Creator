@@ -6,7 +6,7 @@ import https from 'https';
 // 必要参数
 const now = new Date();
 const location = process.env.LOCATION;
-const basicLink = process.env.BASIC_LINK;
+let basicLink = process.env.BASIC_LINK;
 const fileType = process.env.FILE_TYPE;
 const fileTypes = fileType.split(',').map(type => type.trim());
 const ignoreFile = process.env.IGNORE_FILE;
@@ -18,6 +18,9 @@ const urls = new Set();
 // 去除基础链接末尾的斜杠 - #16
 if (basicLink.endsWith('/')) {
     basicLink = basicLink.slice(0, -1);
+    if (debug) {
+        console.log(`[DEBUG] 已自动去除基础链接末尾的斜杠，更新后的基础链接是: ${basicLink}`);
+    }
 }
 
 // 通过 Git 命令，获取文件的最后提交日期
