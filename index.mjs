@@ -15,6 +15,8 @@ const websitePath = process.env.WEBSITE_PATH;
 const debug = process.env.DEBUG;
 const urls = new Set();
 
+console.log(`[DEBUG] Debug状态: ${debug}`)
+
 // 去除基础链接末尾的斜杠 - #16
 if (basicLink.endsWith('/')) {
     basicLink = basicLink.slice(0, -1);
@@ -83,7 +85,6 @@ function scanDirectory(dir) {
 }
 
 try {
-    console.log(`[DEBUG] Debug状态: ${debug}`)
     if (debug) {
         console.log(`[DEBUG] 网站地图存放路径: ${location}`)
         console.log(`[DEBUG] 网站基础链接: ${basicLink}`)
