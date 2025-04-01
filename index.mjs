@@ -97,11 +97,11 @@ try {
     scanDirectory(websitePath);
 
     // 获取当前日期并格式化
-    const currentDate = now.toLocaleString();
+    const currentDate = now.toLocaleString(undefined, { hour12: false });
 
     // 创建 sitemap.xml 文件内容
     let sitemap = `<?xml version="1.0" encoding="UTF-8"?>\n`;
-    sitemap += `<!-- 生成日期: ${currentDate} -->\n`; // 添加生成日期的注释
+    sitemap += `<!-- 由 DuckDuckStudio/Sitemap_Creator 于 ${currentDate} 生成 -->\n`; // 添加生成日期的注释
     sitemap += `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" 
               xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
               xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9 
@@ -185,7 +185,7 @@ async function closeOutdatedPRs() {
 
 try {
     // 获取当前日期和时间
-    const DATE_TIME = now.toLocaleString();
+    const DATE_TIME = now.toLocaleString(undefined, { hour12: false });
 
     // 提交者名和邮箱
     const AUTHOR_NAME = process.env.AUTHOR_NAME.replace(/[\"\'\`]/g, '');
