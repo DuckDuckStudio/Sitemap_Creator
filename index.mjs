@@ -101,7 +101,7 @@ try {
 
     // 创建 sitemap.xml 文件内容
     let sitemap = `<?xml version="1.0" encoding="UTF-8"?>\n`;
-    sitemap += `<!-- 由 DuckDuckStudio/Sitemap_Creator 于 ${currentDate} 生成 -->\n`; // 添加生成日期的注释
+    sitemap += `<!-- 由 DuckDuckStudio/Sitemap_Creator (Pre-Release) 于 ${currentDate} 生成 -->\n`; // 添加生成日期的注释
     sitemap += `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" 
               xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
               xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9 
