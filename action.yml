@@ -89,7 +89,7 @@ runs:
         # ref: ${{ inputs.base_branch }} 不确定这个要不要加，后续看情况吧
 
     - name: 设置 Node.js 环境
-      uses: actions/setup-node@v5
+      uses: actions/setup-node@v6
       with:
         node-version: "latest"
 
