@@ -83,7 +83,7 @@ runs:
   using: composite
   steps:
     - name: 检出仓库
-      uses: actions/checkout@v5
+      uses: actions/checkout@v6
       with:
         fetch-depth: 0 # 检出完整记录
         # ref: ${{ inputs.base_branch }} 不确定这个要不要加，后续看情况吧
