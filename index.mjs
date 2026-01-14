@@ -15,7 +15,7 @@ const websitePath = process.env.WEBSITE_PATH;
 const debug = process.env.DEBUG;
 const urls = new Set();
 
-console.log(`[DEBUG] Debug状态: ${debug}`)
+console.log(`[DEBUG] Debug状态: ${debug}`);
 
 // 去除基础链接末尾的斜杠 - #16
 if (basicLink.endsWith('/')) {
@@ -86,11 +86,11 @@ function scanDirectory(dir) {
 
 try {
     if (debug) {
-        console.log(`[DEBUG] 网站地图存放路径: ${location}`)
-        console.log(`[DEBUG] 网站基础链接: ${basicLink}`)
-        console.log(`[DEBUG] 网站文件存放路径: ${websitePath}`)
-        console.log(`[DEBUG] 页面文件类型: ${fileTypes}`)
-        console.log(`[DEBUG] 忽略的文件: ${ignorePatterns}`)
+        console.log(`[DEBUG] 网站地图存放路径: ${location}`);
+        console.log(`[DEBUG] 网站基础链接: ${basicLink}`);
+        console.log(`[DEBUG] 网站文件存放路径: ${websitePath}`);
+        console.log(`[DEBUG] 页面文件类型: ${fileTypes}`);
+        console.log(`[DEBUG] 忽略的文件: ${ignorePatterns}`);
     }
     // -----------------
 
@@ -188,11 +188,11 @@ try {
     const DATE_TIME = now.toLocaleString(undefined, { hour12: false });
 
     // 提交者名和邮箱
-    const AUTHOR_NAME = process.env.AUTHOR_NAME.replace(/[\"\'\`]/g, '');
-    const AUTHOR_EMAIL = process.env.AUTHOR_EMAIL.replace(/[\"\'\`]/g, '');
+    const AUTHOR_NAME = process.env.AUTHOR_NAME.replace(/["'`]/g, '');
+    const AUTHOR_EMAIL = process.env.AUTHOR_EMAIL.replace(/["'`]/g, '');
 
     // 参数处理
-    let UPDATE_WAY = process.env.UPDATE.toLowerCase().replace(/[\"\'\`-]/g, '').replace(/\s/g, '');
+    let UPDATE_WAY = process.env.UPDATE.toLowerCase().replace(/["'`-]/g, '').replace(/\s/g, '');
     let CLEAN_AUTO_MERGE = '';
     let CLEAN_LABELS = '';
     let CLEAN_REVIEWER = '';
@@ -209,7 +209,7 @@ try {
                 console.log('[DEBUG] 不启用自动合并，因为自动合并方式为空');
             }
         } else {
-            CLEAN_AUTO_MERGE = process.env.AUTO_MERGE.toLowerCase().replace(/[\"\'\`-]/g, '');
+            CLEAN_AUTO_MERGE = process.env.AUTO_MERGE.toLowerCase().replace(/["'`-]/g, '');
             if (['s', 'squash', '压缩', '压缩合并', '压缩自动合并'].includes(CLEAN_AUTO_MERGE)) {
                 CLEAN_AUTO_MERGE = 'squash';
             } else if (['m', 'merge', '合并', '合并提交', '提交'].includes(CLEAN_AUTO_MERGE)) {
@@ -227,12 +227,12 @@ try {
             console.log(`[DEBUG] 已格式化自动合并方式: ${process.env.AUTO_MERGE} -> ${CLEAN_AUTO_MERGE}`);
         }
 
-        CLEAN_LABELS = process.env.LABELS.replace(/[\"\'\`]/g, '');
+        CLEAN_LABELS = process.env.LABELS.replace(/["'`]/g, '');
         if (process.env.LABELS !== CLEAN_LABELS && debug) {
             console.log(`[DEBUG] 标签包含特殊字符，已移除: ${process.env.LABELS} -> ${CLEAN_LABELS}`);
         }
 
-        CLEAN_REVIEWER = process.env.REVIEWER.replace(/[\"\'\`]/g, '');
+        CLEAN_REVIEWER = process.env.REVIEWER.replace(/["'`]/g, '');
         if (process.env.REVIEWER !== CLEAN_REVIEWER && debug) {
             console.log(`[DEBUG] 审查者信息包含特殊字符，已移除: ${process.env.REVIEWER} -> ${CLEAN_REVIEWER}`);
         }

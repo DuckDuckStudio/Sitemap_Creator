@@ -1,6 +1,6 @@
 {
   "name": "sitemap_creator",
-  "version": "1.0.6",
+  "version": "1.0.12",
   "description": "GitHub Action 🚀 for creating and updating sitemaps in your repository.",
   "keywords": [
     "sitemap",
@@ -24,6 +24,12 @@
   "type": "module",
   "main": "index.mjs",
   "scripts": {
-    "test": "node index.mjs"
+    "test": "node index.mjs",
+    "lint": "npx eslint --rule \"semi: [error, always]\""
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.2",
+    "eslint": "^9.39.2",
+    "globals": "^17.0.0"
   }
 }
