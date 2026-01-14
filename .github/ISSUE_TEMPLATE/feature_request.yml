@@ -5,8 +5,7 @@ labels: ["新功能","DEV-需要注意"]
 body:
   - type: markdown
     attributes:
-      value: |
-        感谢您抽出时间与我们讨论新功能的想法！
+      value: 感谢您抽出时间与我们讨论新功能的想法！
   - type: dropdown
     attributes:
       label: 选择一个类别
@@ -30,7 +29,7 @@ body:
       label: 为什么需要实现此功能
       placeholder: 告诉我们为什么需要这个功能？能带来什么好处？
     validations:
-      required: true
+      required: false
   - type: textarea
     attributes:
       label: 对于实施该功能的方法的建议

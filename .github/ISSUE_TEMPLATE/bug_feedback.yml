@@ -35,7 +35,7 @@ body:
       label: 描述如何重现你遇到的问题
       placeholder: 如何重现该问题？(填写此字段对问题调查很有帮助!)
     validations:
-      required: true
+      required: false
   - type: textarea
     attributes:
       label: 实际行为
