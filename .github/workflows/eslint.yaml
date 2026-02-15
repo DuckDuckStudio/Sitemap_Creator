@@ -24,5 +24,5 @@ jobs:
       - name: 运行 Eslint
         shell: bash
         run: |-
-          npm install
+          npm ci
           npm run lint
