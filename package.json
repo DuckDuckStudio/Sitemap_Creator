@@ -28,7 +28,7 @@
     "lint": "npx eslint --rule \"semi: [error, always]\""
   },
   "devDependencies": {
-    "@eslint/js": "^9.39.2",
+    "@eslint/js": "^10.0.1",
     "eslint": "^9.39.2",
     "globals": "^17.0.0"
   }
