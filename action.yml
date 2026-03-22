@@ -83,14 +83,14 @@ runs:
   using: composite
   steps:
     - name: 检出仓库
-      uses: actions/checkout@v6
+      uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
       with:
         fetch-depth: 0 # 检出完整记录
         persist-credentials: false
         # ref: ${{ inputs.base_branch }} 不确定这个要不要加，后续看情况吧
 
     - name: 设置 Node.js 环境
-      uses: actions/setup-node@v6
+      uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6
       with:
         node-version: "latest"
 
@@ -122,7 +122,7 @@ runs:
 
     - name: 获取生成脚本
       shell: bash
-      run: |
+      run: |-
         git clone https://github.com/DuckDuckStudio/Sitemap_Creator -b main # 稳定版
         cp Sitemap_Creator/index.mjs Sitemap_Creator.mjs
         rm -r Sitemap_Creator
@@ -147,6 +147,6 @@ runs:
         FILE_TYPE: ${{ inputs.file_type }}
         IGNORE_FILE: ${{ inputs.ignore_file }}
         WEBSITE_PATH: ${{ inputs.website_path }}
-      run: |
+      run: |-
         node Sitemap_Creator.mjs
         rm Sitemap_Creator.mjs
