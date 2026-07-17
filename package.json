@@ -1,6 +1,6 @@
 {
   "name": "sitemap_creator",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "GitHub Action 🚀 for creating and updating sitemaps in your repository.",
   "keywords": [
     "sitemap",
