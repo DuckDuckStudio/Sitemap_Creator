@@ -107,7 +107,7 @@ jobs:
 
     steps:
       - name: 更新网站地图
-        uses: DuckDuckStudio/Sitemap_Creator@2.0.1
+        uses: DuckDuckStudio/Sitemap_Creator@2.0.2
         with:
           location: "docs/sitemap.xml"
           basic_link: "https://duckduckstudio.github.io/Articles/#"
