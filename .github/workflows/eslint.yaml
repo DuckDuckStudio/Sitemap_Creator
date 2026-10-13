@@ -18,13 +18,13 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: 设置 Node.js
-        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+      - name: 设置 pnpm 和 Node.js
+        uses: pnpm/setup@e0ed22ae4d909f13ed5d2688513f73e1875e46db # v3.0.0
         with:
-          node-version: latest
+          runtime: "node@latest"
+          install: true
+          require-lockfile: true
 
       - name: 运行 Eslint
         shell: bash
-        run: |-
-          npm ci
-          npm run lint
+        run: pnpm run lint
