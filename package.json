@@ -25,11 +25,19 @@
   "main": "index.mjs",
   "scripts": {
     "test": "node index.mjs",
-    "lint": "npx eslint --rule \"semi: [error, always]\""
+    "lint": "eslint --rule \"semi: [error, always]\""
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "eslint": "^10.12.0",
     "globals": "^17.13.0"
-  }
+  },
+  "devEngines": {
+    "packageManager": {
+      "name": "pnpm",
+      "version": "12.11.2",
+      "onFail": "download"
+    }
+  },
+  "packageManager": "pnpm@12.11.2"
 }
