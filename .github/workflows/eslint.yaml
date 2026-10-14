@@ -19,7 +19,7 @@ jobs:
           persist-credentials: false
 
       - name: 设置 pnpm 和 Node.js
-        uses: pnpm/setup@e0ed22ae4d909f13ed5d2688513f73e1875e46db # v3.0.0
+        uses: pnpm/setup@fbda4c85fc2e1e08721cd8763afea8f48d60f024 # v3.0.0
         with:
           runtime: "node@latest"
           install: true
